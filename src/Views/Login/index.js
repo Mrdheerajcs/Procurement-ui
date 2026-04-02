@@ -1,113 +1,58 @@
-import React, {Suspense, useState} from 'react';
-import { Link, useNavigate } from "react-router-dom";
-import LoginImg from '../../assets/images/login-img.svg';
-import Cardiogram from '../../assets/images/cardiogram.png';
-import './login.css'
+import React, { useState } from "react";
+import Register from "../Register"; 
+import "./Login.css";
 
 const Login = () => {
+  const [isRegister, setIsRegister] = useState(false);
 
   return (
-    <>
-       <div id="ihealth-layout" className="theme-tradewind">
-        {/* main body area */}
-        <div className="main p-2 py-3 p-xl-5">
-          {/* Body: Body */}
-          <div className="body d-flex p-0 p-xl-5">
-            <div className="container-xxl">
-              <div className="row g-0">
-                <div className="col-lg-6 d-none d-lg-flex justify-content-center align-items-center rounded-lg auth-h100">
-                  <div style={{ maxWidth: "25rem" }}>
-                    
-                    <div className="mb-5">
-                      <h2 className="color-900 text-center">
-                        Arigen-Procurement, Streamlining your procurement process
-                      </h2>
-                    </div>
-                    {/* Image block */}
-                    <div className="loginimg">
-                      <img src={LoginImg} alt="login-img" />
-                    </div>
-                  </div>
-                </div>
-                <div className="col-lg-6 d-flex justify-content-center align-items-center border-0 rounded-lg auth-h100">
-                  <div
-                    className="w-100 p-3 p-md-5 card border-0 bg-theme text-light"
-                    style={{ maxWidth: "32rem" }}
-                  >
-                    {/* Form */}
-                    <form className="row g-1 p-3 p-md-4">
-                      <div className="col-12 text-center mb-5">
-                        <h1>Procurement Portal Sign in</h1>
-                      </div>
+    <div className={`wrapper ${isRegister ? "register" : ""}`}>
 
-                      <div className="col-12">
-                        <div className="mb-2">
-                          <label className="form-label">Employee Email</label>
-                          <input
-                            type="email"
-                            className="form-control form-control-lg"
-                            placeholder="employee@company.com"
-                          />
-                        </div>
-                      </div>
-                      <div className="col-12">
-                        <div className="mb-2">
-                          <div className="form-label">
-                            <span className="d-flex justify-content-between align-items-center">
-                              Password
-                              <a href="auth-password-reset.html">Reset Password?</a>
-                            </span>
-                          </div>
-                          <input
-                            type="password"
-                            className="form-control form-control-lg"
-                            placeholder="Enter your password"
-                          />
-                        </div>
-                      </div>
-                      <div className="col-12">
-                        <div className="form-check">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            defaultValue=""
-                            id="flexCheckDefault"
-                          />
-                          <label
-                            className="form-check-label"
-                            htmlFor="flexCheckDefault"
-                          >
-                            Keep me signed in
-                          </label>
-                        </div>
-                      </div>
-                      <div className="col-12 text-center mt-4">
-                        <Link to='/dashboard'
-                          href="index.html"
-                          className="btn btn-lg btn-block btn-light lift text-uppercase"
-                          atl="signin"
-                        >
-                          SIGN IN       
-                        </Link>
-                      </div>
-                      <div className="col-12 text-center mt-4">
-                        <span>
-                          Don't have an account yet?
-                          <a href="auth-signup.html">Sign up here</a>
-                        </span>
-                      </div>
-                    </form>
-                    {/* End Form */}
-                  </div>
-                </div>
-              </div>
-              {/* End Row */}
-            </div>
-          </div>
+       
+      <div className="form-box login">
+        <h2>Login</h2>
+
+        <div className="input-box" style={{ "--i": 1 }}>
+          <input type="text" placeholder="Email" />
         </div>
+
+        <div className="input-box" style={{ "--i": 2 }}>
+          <input type="password" placeholder="Password" />
+        </div>
+
+        <button className="btn">Login</button>
+
+        <p>
+          Don't have account?{" "}
+          <span onClick={() => setIsRegister(true)}>Register</span>
+        </p>
       </div>
 
-    </>
+      
+      <div className="form-box register-form">
+        <Register goToLogin={() => setIsRegister(false)} />
+      </div>
+
+      
+      <div className="info-content">
+        <h2>{isRegister ? "Welcome Back!" : "Hello Friend!"}</h2>
+
+        <p>
+          {isRegister
+            ? "Already have account? Login now"
+            : "Create account to get started"}
+        </p>
+
+        <button
+          className="btn"
+          onClick={() => setIsRegister(!isRegister)}
+        >
+          {isRegister ? "Login" : "Register"}
+        </button>
+      </div>
+
+    </div>
   );
 };
+
 export default Login;

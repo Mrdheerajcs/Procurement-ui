@@ -5,10 +5,12 @@ import 'bootstrap/dist/js/bootstrap.bundle';
 import { MenuProvider } from './context/MenuContext';
 
 
+
 const Layout =  React.lazy(() => import('./Views/layout/index'));
 const Dashboard = React.lazy(() => import('./Views/Dashboard/index'));
 const Login = React.lazy(() => import('./Views/Login/index'));
 const MPRManagement = React.lazy(() => import('./Views/Models/MPRManagement/index'));
+const Register = React.lazy(() => import('./Views/Register/index'));
 const isAuthenticated = () => {
   // Replace this with real authentication check logic
  // return Cookies.get('isAuthenticated') === "true";
@@ -23,6 +25,8 @@ function App() {
     <Router>
       <Suspense>
         <Routes>
+           <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/" element={<PrivateRoute element={<Layout />} />}>
             <Route path="/" element={<Dashboard />} />
               <Route path="/mpr-list" element={<MPRManagement />} />
