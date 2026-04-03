@@ -43,6 +43,28 @@ const Sidebar = () => {
                 <span>MPR Management</span>
               </Link>
             </li>
+
+
+                 <li className="collapsed">
+              <Link
+                className="m-link"
+                data-bs-toggle="collapse"
+                data-bs-target="#menu-Tender"
+                to="#"
+              >
+                <i className="icofont-file-alt fs-5" /> <span>MPR Management</span>
+                <span className="arrow icofont-rounded-down ms-auto text-end fs-5" />
+              </Link>
+              {/* Menu: Sub menu ul */}
+              <ul className="sub-menu collapse" id="menu-Tender">
+                
+                <li>
+                  <Link className="ms-link" to="creatempr">
+                    Create MPR
+                  </Link>
+                </li>
+              </ul>
+            </li>
             <li className="collapsed">
               <Link
                 className="m-link"
