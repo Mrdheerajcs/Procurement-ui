@@ -1,7 +1,4 @@
-
 import React, { useState } from "react";
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { Form, Row, Col, Button, Table, Card } from "react-bootstrap";
 
 const CreateMPR = () => {
   const [mprData, setMprData] = useState({
@@ -37,7 +34,6 @@ const CreateMPR = () => {
   const [showApproval, setShowApproval] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  // Handle input fields
   const handleFieldChange = (e) => {
     const { name, value } = e.target;
     setMprData({ ...mprData, [name]: value });
@@ -54,7 +50,7 @@ const CreateMPR = () => {
   };
 
   const removeRow = (index) => {
-    if (mprData.tableRows.length === 1) return; 
+    if (mprData.tableRows.length === 1) return;
     const rows = [...mprData.tableRows];
     rows.splice(index, 1);
     setMprData({ ...mprData, tableRows: rows });
@@ -67,13 +63,11 @@ const CreateMPR = () => {
     setMprData({ ...mprData, tableRows: rows });
   };
 
-  
   const handleSubmit = (e) => {
     e.preventDefault();
     setShowApproval(true);
   };
 
-  
   const handleApprove = () => {
     alert("MPR Approved ✅");
   };
@@ -86,29 +80,28 @@ const CreateMPR = () => {
     alert("MPR Rejected ❌ Reason: " + rejectionReason);
   };
 
+  // ================= APPROVAL PAGE =================
   if (showApproval) {
     return (
-      <div className="container mt-4" style={{ fontSize: '0.9rem' }}>
-        <h2 className="mb-4" style={{ color: '#007bff' }}>MPR Approval</h2>
+      <div className="container mt-4" style={{ fontSize: "0.9rem" }}>
+        <h2 className="mb-4 text-primary">MPR Approval</h2>
 
-        {/* Summary */}
-        <Card className="mb-3 p-3">
-          <Row>
-            <Col md={3}><b>MPR No:</b> {mprData.mprNo}</Col>
-            <Col md={3}><b>Date:</b> {mprData.dob}</Col>
-            <Col md={3}><b>Department:</b> {mprData.department}</Col>
-            <Col md={3}><b>Project:</b> {mprData.projectName}</Col>
-          </Row>
-          <Row className="mt-2">
-            <Col md={3}><b>Priority:</b> {mprData.priority}</Col>
-            <Col md={3}><b>Required By:</b> {mprData.deliverySchedule}</Col>
-            <Col md={3}><b>Status:</b> {mprData.status}</Col>
-          </Row>
-        </Card>
+        <div className="card mb-3 p-3">
+          <div className="row">
+            <div className="col-md-3"><b>MPR No:</b> {mprData.mprNo}</div>
+            <div className="col-md-3"><b>Date:</b> {mprData.dob}</div>
+            <div className="col-md-3"><b>Department:</b> {mprData.department}</div>
+            <div className="col-md-3"><b>Project:</b> {mprData.projectName}</div>
+          </div>
+          <div className="row mt-2">
+            <div className="col-md-3"><b>Priority:</b> {mprData.priority}</div>
+            <div className="col-md-3"><b>Required By:</b> {mprData.deliverySchedule}</div>
+            <div className="col-md-3"><b>Status:</b> {mprData.status}</div>
+          </div>
+        </div>
 
-        {/* Items Table */}
-        <h5 className="mt-4" style={{ color: '#007bff' }}>Items</h5>
-        <Table striped bordered hover responsive>
+        <h5 className="mt-4 text-primary">Items</h5>
+        <table className="table table-striped table-bordered table-hover">
           <thead className="table-dark">
             <tr>
               <th>SR</th><th>Item Code</th><th>Item Name</th><th>UOM</th><th>Specification</th>
@@ -126,56 +119,97 @@ const CreateMPR = () => {
               </tr>
             ))}
           </tbody>
-        </Table>
+        </table>
 
-        {/* Approval Actions */}
         <div className="mt-3">
           <h5>Approval Actions</h5>
-          <div className="mb-2">
-            <Button variant="secondary" className="me-2" onClick={handleApprove}>Approve</Button>
-            <Button variant="danger" className="me-2" onClick={() => setRejectionReason("")}>Reject</Button>
+          <button className="btn btn-secondary me-2" onClick={handleApprove}>Approve</button>
+          <button className="btn btn-danger me-2">Reject</button>
+
+          <div className="mt-2">
+            <label>Rejection Reason</label>
+            <textarea
+              className="form-control"
+              rows={2}
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+            />
           </div>
-          <Form.Group className="mb-2">
-            <Form.Label>Rejection Reason</Form.Label>
-            <Form.Control as="textarea" rows={2} value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
-          </Form.Group>
-          <Button variant="danger" onClick={handleReject}>Confirm Reject</Button>
+
+          <button className="btn btn-danger mt-2" onClick={handleReject}>Confirm Reject</button>
         </div>
       </div>
     );
   }
 
+  // ================= CREATE PAGE =================
   return (
-    <div className="container mt-4" style={{ fontSize: '0.9rem' }}>
-      <h2 className="mb-4" style={{ color: '#007bff' }}>Create MPR</h2>
-      <Form onSubmit={handleSubmit}>
-        <Row className="mb-3">
-          <Col md={4}><Form.Group><Form.Label>MPR No</Form.Label><Form.Control type="text" name="mprNo" value={mprData.mprNo} onChange={handleFieldChange} placeholder="Enter MPR No" /></Form.Group></Col>
-          <Col md={4}><Form.Group><Form.Label>DOB</Form.Label><Form.Control type="date" name="dob" value={mprData.dob} onChange={handleFieldChange} /></Form.Group></Col>
-          <Col md={4}><Form.Group><Form.Label>Department</Form.Label><Form.Control type="text" name="department" value={mprData.department} onChange={handleFieldChange} placeholder="Enter Department" /></Form.Group></Col>
-        </Row>
+    <div className="container mt-4" style={{ fontSize: "0.9rem" }}>
+      <h2 className="mb-4 text-primary">Create MPR</h2>
 
-        <Row className="mb-3">
-          <Col md={4}><Form.Group><Form.Label>Project Name</Form.Label><Form.Control type="text" name="projectName" value={mprData.projectName} onChange={handleFieldChange} placeholder="Enter Project Name" /></Form.Group></Col>
-          <Col md={4}><Form.Group><Form.Label>MPR Type</Form.Label><Form.Control type="text" name="mprType" value={mprData.mprType} onChange={handleFieldChange} placeholder="Enter MPR Type" /></Form.Group></Col>
-          <Col md={4}><Form.Group><Form.Label>Tender Type</Form.Label><Form.Control type="text" name="tenderType" value={mprData.tenderType} onChange={handleFieldChange} placeholder="Enter Tender Type" /></Form.Group></Col>
-        </Row>
+      <form onSubmit={handleSubmit}>
+        <div className="row mb-3">
+          <div className="col-md-4">
+            <label>MPR No</label>
+            <input className="form-control" name="mprNo" value={mprData.mprNo} onChange={handleFieldChange} />
+          </div>
+          <div className="col-md-4">
+            <label>DOB</label>
+            <input type="date" className="form-control" name="dob" value={mprData.dob} onChange={handleFieldChange} />
+          </div>
+          <div className="col-md-4">
+            <label>Department</label>
+            <input className="form-control" name="department" value={mprData.department} onChange={handleFieldChange} />
+          </div>
+        </div>
 
-        <Row className="mb-3">
-          <Col md={4}><Form.Group><Form.Label>Priority</Form.Label><Form.Control type="text" name="priority" value={mprData.priority} onChange={handleFieldChange} placeholder="Enter Priority" /></Form.Group></Col>
-          <Col md={4}><Form.Group><Form.Label>Delivery Schedule</Form.Label><Form.Control type="date" name="deliverySchedule" value={mprData.deliverySchedule} onChange={handleFieldChange} /></Form.Group></Col>
-          <Col md={4}><Form.Group><Form.Label>Duration (Days)</Form.Label><Form.Control type="number" name="duration" value={mprData.duration} onChange={handleFieldChange} placeholder="Enter Duration" /></Form.Group></Col>
-        </Row>
+        <div className="row mb-3">
+          <div className="col-md-4">
+            <label>Project Name</label>
+            <input className="form-control" name="projectName" value={mprData.projectName} onChange={handleFieldChange} />
+          </div>
+          <div className="col-md-4">
+            <label>MPR Type</label>
+            <input className="form-control" name="mprType" value={mprData.mprType} onChange={handleFieldChange} />
+          </div>
+          <div className="col-md-4">
+            <label>Tender Type</label>
+            <input className="form-control" name="tenderType" value={mprData.tenderType} onChange={handleFieldChange} />
+          </div>
+        </div>
 
-        <Row className="mb-3">
-          <Col md={4}><Form.Group><Form.Label>Status</Form.Label><Form.Control type="text" name="status" value={mprData.status} onChange={handleFieldChange} placeholder="Enter Status" /></Form.Group></Col>
-          <Col md={4}><Form.Group><Form.Label>Special Notes</Form.Label><Form.Control as="textarea" rows={2} name="specialNotes" value={mprData.specialNotes} onChange={handleFieldChange} /></Form.Group></Col>
-          <Col md={4}><Form.Group><Form.Label>Justification</Form.Label><Form.Control as="textarea" rows={2} name="justification" value={mprData.justification} onChange={handleFieldChange} /></Form.Group></Col>
-        </Row>
+        <div className="row mb-3">
+          <div className="col-md-4">
+            <label>Priority</label>
+            <input className="form-control" name="priority" value={mprData.priority} onChange={handleFieldChange} />
+          </div>
+          <div className="col-md-4">
+            <label>Delivery Schedule</label>
+            <input type="date" className="form-control" name="deliverySchedule" value={mprData.deliverySchedule} onChange={handleFieldChange} />
+          </div>
+          <div className="col-md-4">
+            <label>Duration</label>
+            <input type="number" className="form-control" name="duration" value={mprData.duration} onChange={handleFieldChange} />
+          </div>
+        </div>
 
-        {/* Items Table */}
-        <h5 className="mt-4" style={{ color: '#007bff' }}>Items</h5>
-        <Table striped bordered hover responsive>
+        <div className="row mb-3">
+          <div className="col-md-4">
+            <label>Status</label>
+            <input className="form-control" name="status" value={mprData.status} onChange={handleFieldChange} />
+          </div>
+          <div className="col-md-4">
+            <label>Special Notes</label>
+            <textarea className="form-control" rows={2} name="specialNotes" value={mprData.specialNotes} onChange={handleFieldChange}></textarea>
+          </div>
+          <div className="col-md-4">
+            <label>Justification</label>
+            <textarea className="form-control" rows={2} name="justification" value={mprData.justification} onChange={handleFieldChange}></textarea>
+          </div>
+        </div>
+
+        <h5 className="mt-4 text-primary">Items</h5>
+        <table className="table table-striped table-bordered">
           <thead className="table-dark">
             <tr>
               <th>SR</th><th>Item Code</th><th>Item Name</th><th>UOM</th><th>Specification</th>
@@ -183,13 +217,15 @@ const CreateMPR = () => {
               <th>Last Purchase</th><th>Remarks</th><th>Action</th>
             </tr>
           </thead>
+
           <tbody>
             {mprData.tableRows.map((row, index) => (
               <tr key={index}>
                 <td>{index + 1}</td>
                 {Object.keys(row).map((key) => (
                   <td key={key}>
-                    <Form.Control
+                    <input
+                      className="form-control"
                       type={key === "qty" || key === "rate" || key === "value" ? "number" : key === "lastPurchase" ? "date" : "text"}
                       name={key}
                       value={row[key]}
@@ -197,17 +233,19 @@ const CreateMPR = () => {
                     />
                   </td>
                 ))}
-                <td><Button variant="danger" size="sm" onClick={() => removeRow(index)}>X</Button></td>
+                <td>
+                  <button type="button" className="btn btn-danger btn-sm" onClick={() => removeRow(index)}>X</button>
+                </td>
               </tr>
             ))}
           </tbody>
-        </Table>
+        </table>
 
         <div className="d-flex justify-content-between">
-          <Button variant="success" onClick={addRow}>+ Add Row</Button>
-          <Button type="submit" variant="primary">Submit MPR</Button>
+          <button type="button" className="btn btn-success" onClick={addRow}>+ Add Row</button>
+          <button type="submit" className="btn btn-primary">Submit MPR</button>
         </div>
-      </Form>
+      </form>
     </div>
   );
 };
