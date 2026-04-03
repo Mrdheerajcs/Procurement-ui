@@ -83,9 +83,11 @@ const CreateMPR = () => {
   // ================= APPROVAL PAGE =================
   if (showApproval) {
     return (
-      <div className="container mt-4" style={{ fontSize: "0.9rem" }}>
-        <h2 className="mb-4 text-primary">MPR Approval</h2>
-
+      <div className="container mt-3">
+  <div className="card shadow-sm p-2">
+    <div className=" bg-light border-bottom">
+        <h2 className="mb-3 text-black">MPR Approval</h2>
+</div>
         <div className="card mb-3 p-3">
           <div className="row">
             <div className="col-md-3"><b>MPR No:</b> {mprData.mprNo}</div>
@@ -139,14 +141,17 @@ const CreateMPR = () => {
           <button className="btn btn-danger mt-2" onClick={handleReject}>Confirm Reject</button>
         </div>
       </div>
+      </div>
     );
   }
 
   // ================= CREATE PAGE =================
   return (
-    <div className="container mt-4" style={{ fontSize: "0.9rem" }}>
-      <h2 className="mb-4 text-primary">Create MPR</h2>
-
+    <div className="container mt-4">
+  <div className="card shadow-sm p-2">
+    <div className=" bg-light border-bottom">
+      <h2 className="mb-3 text-black">Create MPR</h2>
+</div>
       <form onSubmit={handleSubmit}>
         <div className="row mb-3">
           <div className="col-md-4">
@@ -246,6 +251,7 @@ const CreateMPR = () => {
           <button type="submit" className="btn btn-primary">Submit MPR</button>
         </div>
       </form>
+    </div>
     </div>
   );
 };
