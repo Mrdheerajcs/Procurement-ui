@@ -1,40 +1,54 @@
-import React, { Suspense, useContext } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle';
-import { MenuProvider } from './context/MenuContext';
+import React, { Suspense, lazy } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./auth/AuthContext";
+import PrivateRoute from "./auth/PrivateRoute";
+
+const Layout = lazy(() => import("./Views/layout"));
+const Dashboard = lazy(() => import("./Views/Dashboard"));
+const Login = lazy(() => import("./Views/Login"));
+const MPRManagement = lazy(() => import("./Views/Models/MPRManagement"));
+const CreateMPR = lazy(() => import("./Views/CreateMPR"));
+const ForceChangePassword = lazy(() => import("./Components/ForceChangePassword"));
+const PublishTender = lazy(() => import("./Views/PublishTender"));
+const SearchTender = lazy(() => import("./Views/SearchTender"));
 
 
+const Loader = () => (
+  <div style={{ textAlign: "center", marginTop: "50px" }}>
+    Loading...
+  </div>
+);
 
-const Layout =  React.lazy(() => import('./Views/layout/index'));
-const Dashboard = React.lazy(() => import('./Views/Dashboard/index'));
-const Login = React.lazy(() => import('./Views/Login/index'));
-const MPRManagement = React.lazy(() => import('./Views/Models/MPRManagement/index'));
-const Register = React.lazy(() => import('./Views/Register/index'));
-const isAuthenticated = () => {
-  // Replace this with real authentication check logic
- // return Cookies.get('isAuthenticated') === "true";
- return true;
-};
-const PrivateRoute = ({ element, path }) => {
-  return isAuthenticated() ? element : <Navigate to="/" />;
-};
 function App() {
   return (
-    <MenuProvider>
-    <Router>
-      <Suspense>
-        <Routes>
-           <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/" element={<PrivateRoute element={<Layout />} />}>
-            <Route path="/" element={<Dashboard />} />
-              <Route path="/mpr-list" element={<MPRManagement />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Suspense fallback={<Loader />}>
+          <Routes>
+
+            <Route path="/" element={<Login />} />
+
+            <Route element={<PrivateRoute />}>
+
+              <Route
+                path="/force-change-password"
+                element={<ForceChangePassword />}
+              />
+
+              <Route element={<Layout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/mpr-list" element={<MPRManagement />} />
+                <Route path="/create-mpr" element={<CreateMPR />} />
+               <Route path='/publishtender' element ={<PublishTender/>}/>
+               <Route path='/searchtender' element ={<SearchTender/>}/>
+              </Route>
+
             </Route>
-        </Routes>
-      </Suspense>
-    </Router>
-    </MenuProvider>
+
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
