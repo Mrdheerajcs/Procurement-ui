@@ -37,14 +37,6 @@ const Sidebar = () => {
 
               </ul>
             </li>
-            <li>
-              <Link className="m-link" to="mpr-list">
-                <i className="icofont-clipboard fs-5" />
-                <span>MPR Management</span>
-              </Link>
-            </li>
-
-
                  <li className="collapsed">
               <Link
                 className="m-link"

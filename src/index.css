@@ -20515,3 +20515,9 @@
    }
  }
  
+  .form-control,
+.form-select,
+textarea {
+  font-size: 14px !important;
+} 
+

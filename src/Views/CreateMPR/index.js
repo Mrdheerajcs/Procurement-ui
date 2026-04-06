@@ -26,6 +26,7 @@ const CreateMPR = () => {
         stock: "10",
         amc: "Yes",
         lastPurchase: "2026-01-15",
+        vendorname: "ABC",
         remarks: "Urgent requirement"
       },
     ]
@@ -44,7 +45,7 @@ const CreateMPR = () => {
       ...mprData,
       tableRows: [
         ...mprData.tableRows,
-        { itemCode: "", itemName: "", uom: "", specification: "", qty: "", rate: "", value: "", stock: "", amc: "", lastPurchase: "", remarks: "" }
+        { itemCode: "", itemName: "", uom: "", specification: "", qty: "", rate: "", value: "", stock: "", amc: "", lastPurchase: "",  vendorname: "", remarks: "" }
       ]
     });
   };
@@ -83,10 +84,10 @@ const CreateMPR = () => {
   // ================= APPROVAL PAGE =================
   if (showApproval) {
     return (
-      <div className="container mt-3">
-  <div className="card shadow-sm p-2">
+<div className="container-fluid mt-2 px-2">
+    <div className="card shadow-sm p-2">
     <div className=" bg-light border-bottom">
-        <h2 className="mb-3 text-black">MPR Approval</h2>
+        <h4 className="mb-3 text-black">MPR Approval</h4>
 </div>
         <div className="card mb-3 p-3">
           <div className="row">
@@ -103,14 +104,25 @@ const CreateMPR = () => {
         </div>
 
         <h5 className="mt-4 text-primary">Items</h5>
-        <table className="table table-striped table-bordered table-hover">
-          <thead className="table-dark">
-            <tr>
-              <th>SR</th><th>Item Code</th><th>Item Name</th><th>UOM</th><th>Specification</th>
-              <th>Qty</th><th>Rate</th><th>Value</th><th>Stock</th><th>AMC</th>
-              <th>Last Purchase</th><th>Remarks</th>
-            </tr>
-          </thead>
+        <div className="table-responsive">
+       <table className="table table-striped table-bordered table-hover table-sm text-center align-middle">
+  <thead className="table-dark">
+    <tr style={{ fontSize: "14px" }}>
+      <th className="p-1">SR</th>
+      <th className="p-1">Item Code</th>
+      <th className="p-1">Item Name</th>
+      <th className="p-1">UOM</th>
+      <th className="p-1">Specification</th>
+      <th className="p-1">Qty</th>
+      <th className="p-1">Rate</th>
+      <th className="p-1">Value</th>
+      <th className="p-1">Stock</th>
+      <th className="p-1">AMC</th>
+      <th className="p-1">Last Purchase</th>
+      <th className="p-1">Vendor</th>
+      <th className="p-1">Remarks</th>
+    </tr>
+  </thead>
           <tbody>
             {mprData.tableRows.map((row, index) => (
               <tr key={index}>
@@ -122,7 +134,7 @@ const CreateMPR = () => {
             ))}
           </tbody>
         </table>
-
+</div>
         <div className="mt-3">
           <h5>Approval Actions</h5>
           <button className="btn btn-secondary me-2" onClick={handleApprove}>Approve</button>
@@ -147,10 +159,10 @@ const CreateMPR = () => {
 
   // ================= CREATE PAGE =================
   return (
-    <div className="container mt-4">
-  <div className="card shadow-sm p-2">
+<div className="container-fluid mt-2 px-2">
+    <div className="card shadow-sm p-2">
     <div className=" bg-light border-bottom">
-      <h2 className="mb-3 text-black">Create MPR</h2>
+      <h4 className="mb-3 text-black">Create MPR</h4>
 </div>
       <form onSubmit={handleSubmit}>
         <div className="row mb-3">
@@ -213,43 +225,91 @@ const CreateMPR = () => {
           </div>
         </div>
 
-        <h5 className="mt-4 text-primary">Items</h5>
-        <table className="table table-striped table-bordered">
-          <thead className="table-dark">
-            <tr>
-              <th>SR</th><th>Item Code</th><th>Item Name</th><th>UOM</th><th>Specification</th>
-              <th>Qty</th><th>Rate</th><th>Value</th><th>Stock</th><th>AMC</th>
-              <th>Last Purchase</th><th>Remarks</th><th>Action</th>
-            </tr>
-          </thead>
+       <h5 className="mt-4 text-primary">Items</h5>
 
-          <tbody>
-            {mprData.tableRows.map((row, index) => (
-              <tr key={index}>
-                <td>{index + 1}</td>
-                {Object.keys(row).map((key) => (
-                  <td key={key}>
-                    <input
-                      className="form-control"
-                      type={key === "qty" || key === "rate" || key === "value" ? "number" : key === "lastPurchase" ? "date" : "text"}
-                      name={key}
-                      value={row[key]}
-                      onChange={(e) => handleRowChange(index, e)}
-                    />
-                  </td>
-                ))}
-                <td>
-                  <button type="button" className="btn btn-danger btn-sm" onClick={() => removeRow(index)}>X</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+{/* ===== TABLE ===== */}
+<div className="table-responsive">
+  <table className="table table-bordered table-striped table-sm text-center align-middle">
+    <thead className="table-dark">
+      <tr>
+        <th>SR</th>
+        <th>Item Code</th>
+        <th>Item Name</th>
+        <th>UOM</th>
+        <th>Specification</th>
+        <th>Qty</th>
+        <th>Rate</th>
+        <th>Value</th>
+        <th>Stock</th>
+        <th>AMC</th>
+        <th>Last Purchase</th>
+        <th>Vendor name</th>
+        <th>Remarks</th>
+        <th>Action</th>
+      </tr>
+    </thead>
 
-        <div className="d-flex justify-content-between">
-          <button type="button" className="btn btn-success" onClick={addRow}>+ Add Row</button>
-          <button type="submit" className="btn btn-primary">Submit MPR</button>
-        </div>
+    <tbody>
+      {mprData.tableRows.map((row, index) => (
+        <tr key={index}>
+          <td>{index + 1}</td>
+
+          {Object.keys(row).map((key) => (
+            <td key={key}>
+              {key === "vendorname" ? (
+                <select
+                  className="form-select form-select-sm"
+                  name="vendorname"
+                  value={row.vendorname}
+                  onChange={(e) => handleRowChange(index, e)}
+                >
+                  <option value="">Select</option>
+                  <option value="ABC">ABC</option>
+                  <option value="XYZ">XYZ</option>
+                  <option value="Tech">Tech</option>
+                </select>
+              ) : (
+                <input
+                  className="form-control form-control-sm"
+                  type={
+                    key === "qty" || key === "rate" || key === "value"
+                      ? "number"
+                      : key === "lastPurchase"
+                      ? "date"
+                      : "text"
+                  }
+                  name={key}
+                  value={row[key]}
+                  onChange={(e) => handleRowChange(index, e)}
+                />
+              )}
+            </td>
+          ))}
+
+          <td>
+            <button
+              type="button"
+              className="btn btn-danger btn-sm"
+              onClick={() => removeRow(index)}
+            >
+              X
+            </button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+         
+
+<div className="d-flex justify-content-between gap-2">
+    <button type="button" className="btn btn-success w-md-auto" onClick={addRow}>
+    + Add Row
+  </button>
+  <button type="submit" className="btn btn-primary w-md-auto">
+    Submit MPR
+  </button>
+</div>
       </form>
     </div>
     </div>
