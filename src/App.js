@@ -38,7 +38,7 @@ function App() {
               <Route element={<Layout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/mpr-list" element={<MPRManagement />} />
-                <Route path="/create-mpr" element={<CreateMPR />} />
+                <Route path="/creatempr" element={<CreateMPR />} />
                <Route path='/publishtender' element ={<PublishTender/>}/>
                <Route path='/searchtender' element ={<SearchTender/>}/>
               </Route>
