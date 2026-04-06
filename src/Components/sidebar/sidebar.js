@@ -10,6 +10,7 @@ const Sidebar = () => {
     if (location.pathname.startsWith("/dashboard")) setOpenMenu("dashboard");
     else if (location.pathname.startsWith("/creatempr")) setOpenMenu("mpr");
     else if (location.pathname.startsWith("/tender")) setOpenMenu("tender");
+    else if (location.pathname.startsWith("/publishtender"))setOpenMenu("publishtender");
     else if (
       location.pathname.startsWith("/purchase-orders") ||
       location.pathname.startsWith("/grn") ||
@@ -83,6 +84,7 @@ const Sidebar = () => {
               <i className="icofont-file-alt fs-5" />
               <span>Tender Management</span>
               <span className="arrow icofont-rounded-down ms-auto fs-5" />
+
             </div>
 
             <ul className={`sub-menu ${openMenu === "tender" ? "show" : ""}`}>
@@ -91,6 +93,7 @@ const Sidebar = () => {
               <li><Link className={`ms-link ${isActive("/prebid-queries") ? "active" : ""}`} to="/prebid-queries">Pre-Bid Queries</Link></li>
               <li><Link className={`ms-link ${isActive("/bid-list") ? "active" : ""}`} to="/bid-list">Bid Management</Link></li>
               <li><Link className={`ms-link ${isActive("/evaluation") ? "active" : ""}`} to="/evaluation">Evaluation & Award</Link></li>
+               <li><Link className={`ms-link ${isActive("/publishtender") ? "active" : ""}`} to="/publishtender">Publish Tender</Link></li>
             </ul>
           </li>
 
