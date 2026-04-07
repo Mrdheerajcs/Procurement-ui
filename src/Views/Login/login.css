@@ -542,6 +542,11 @@
 /* ── SUCCESS SCREEN ── */
 .lr-success-wrap  { text-align: center; padding: 20px 10px; }
 .lr-success-icon  { font-size: 52px; margin-bottom: 12px; }
+.lr-success {
+  color: #27ae60;
+  font-weight: 600;
+  margin-top: 10px;
+}
 
 /* ── CORNER BUTTONS GROUP ── */
 .lr-corner-btns {

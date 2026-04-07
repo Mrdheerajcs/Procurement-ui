@@ -131,8 +131,9 @@ const Login = () => {
   const [submitted, setSubmitted] = useState(false);
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
+  const [vendorTypes, setVendorTypes] = useState([]);
   const [loginData, setLoginData] = useState({ username: "", password: "" });
-  
+const [successMsg, setSuccessMsg] = useState("");
 
   const [fd, setFd] = useState({
     vendorCode: "",
@@ -141,6 +142,7 @@ const Login = () => {
     mobileNo: "",
     alternateMobile: "",
     emailId: "",
+    vendorTypeId: "",
 
     addressLine1: "",
     addressLine2: "",
@@ -166,32 +168,46 @@ const Login = () => {
     blacklistReason: "",
   });
 
-useEffect(() => {
-  fetchCountries();
-}, []);
+  useEffect(() => {
+    fetchCountries();
+    fetchVendorTypes();
+  }, []);
 
-const fetchCountries = async () => {
-  try {
-    const res = await apiClient.get("/api/master/getAllcountry");
+  const fetchCountries = async () => {
+    try {
+      const res = await apiClient.get("/api/master/getAllcountry");
 
-    if (res.status === "SUCCESS") {
-      setCountries(res.data); // 👈 important
+      if (res.status === "SUCCESS") {
+        setCountries(res.data); // 👈 important
+      }
+    } catch (err) {
+      console.log(err);
+      setLoginError(err.message || "Something went wrong");
     }
-  } catch (err) {
-  console.log(err);
-  setLoginError(err.message || "Something went wrong");
-}
-};
+  };
 
-const fetchStates = async (countryId) => {
-  try {
-    const res = await apiClient.get(`/api/master/getStateId/${countryId}`);
-    setStates(res); // 👈 your API directly returns list
-  } catch (err) {
-  console.log(err);
-  setLoginError(err.message || "Something went wrong");
-}
-};
+  const fetchStates = async (countryId) => {
+    try {
+      const res = await apiClient.get(`/api/master/getStateId/${countryId}`);
+      setStates(res); // 👈 your API directly returns list
+    } catch (err) {
+      console.log(err);
+      setLoginError(err.message || "Something went wrong");
+    }
+  };
+
+  const fetchVendorTypes = async () => {
+    try {
+      const res = await apiClient.get("/api/master/getAllVendorType");
+
+      if (res.status === "SUCCESS") {
+        setVendorTypes(res.data); // 👈 important
+      }
+    } catch (err) {
+      console.log(err);
+      setLoginError(err.message || "Something went wrong");
+    }
+  };
 
   const totalSteps = 5;
   const stepNames = ["Basic", "Address", "Legal", "Bank", "Pref"];
@@ -200,14 +216,6 @@ const fetchStates = async (countryId) => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-
-  useEffect(() => {
-  if (submitted) {
-    setTimeout(() => {
-      flip(); // go to login
-    }, 3000); // 3 sec
-  }
-}, [submitted]);
 
   /* ── HANDLERS ── */
   const handleChange = (e) => {
@@ -228,19 +236,19 @@ const fetchStates = async (countryId) => {
       let updatedFd = { ...prev, [name]: val };
 
       // 🌍 Country/State dynamic logic
-if (name === "country") {
-  const selectedCountry = countries.find(
-    (c) => c.countryName === value
-  );
+      if (name === "country") {
+        const selectedCountry = countries.find(
+          (c) => c.countryName === value
+        );
 
-  if (selectedCountry) {
-    fetchStates(selectedCountry.countryId); // 🔥 call API
-  } else {
-    setStates([]);
-  }
+        if (selectedCountry) {
+          fetchStates(selectedCountry.countryId); // 🔥 call API
+        } else {
+          setStates([]);
+        }
 
-  updatedFd.state = ""; // reset state
-}
+        updatedFd.state = ""; // reset state
+      }
 
       // 🔒 Validations
       if (name === "mobileNo" || name === "alternateMobile") {
@@ -320,28 +328,28 @@ if (name === "country") {
       const res = await apiClient.post("/auth/login", loginData);
 
       if (res.status === "SUCCESS" && res.data?.token) {
-  const loginInfo = res.data;
+        const loginInfo = res.data;
 
-  const userData = {
-    token: loginInfo.token,
-    tokenType: loginInfo.tokenType,
-    expiresAt: Date.now() + loginInfo.expiresIn,
-    username: loginInfo.username,
-    roles: loginInfo.roles,
-    userId: loginInfo.userId,
-    email: loginInfo.email,
-    isPasswordChanged: loginInfo.isPasswordChanged,
-  };
+        const userData = {
+          token: loginInfo.token,
+          tokenType: loginInfo.tokenType,
+          expiresAt: Date.now() + loginInfo.expiresIn,
+          username: loginInfo.username,
+          roles: loginInfo.roles,
+          userId: loginInfo.userId,
+          email: loginInfo.email,
+          isPasswordChanged: loginInfo.isPasswordChanged,
+        };
 
-  login(userData);
+        login(userData);
 
-  // 🔥 NEW LOGIC
-  if (!loginInfo.isPasswordChanged) {
-    navigate("/force-change-password");
-  } else {
-    navigate("/dashboard");
-  }
-} else {
+        // 🔥 NEW LOGIC
+        if (!loginInfo.isPasswordChanged) {
+          navigate("/force-change-password");
+        } else {
+          navigate("/dashboard");
+        }
+      } else {
         setLoginError(res.message || "Invalid credentials");
       }
     } catch (err) {
@@ -351,29 +359,36 @@ if (name === "country") {
     }
   };
   /* ── REGISTER API ── */
-  const submitForm = async () => {
-    setRegError("");
-    setLoading(true);
-    
-    const payload = {
-      ...fd,
-      isPreferred: fd.isPreferred ? "Y" : "N",
-      isBlacklisted: fd.isBlacklisted ? "Y" : "N",
-      vendorTypeId: 3, // default to "Local"
-    };
-    try {
-      const res = await apiClient.post("/api/vendors/registration", payload);
-      if (res.id || res.success) {
-        setSubmitted(true);
-      } else {
-        setRegError(res.message || "Registration failed.");
-      }
-    } catch {
-      setRegError("Server error. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+const submitForm = async () => {
+  setRegError("");
+  setSuccessMsg("");
+  setLoading(true);
+
+  const payload = {
+    ...fd,
+    isPreferred: fd.isPreferred ? "Y" : "N",
+    isBlacklisted: fd.isBlacklisted ? "Y" : "N",
   };
+
+  try {
+    const res = await apiClient.post("/api/vendors/registration", payload);
+
+    if (res.status === "SUCCESS") {
+      setSuccessMsg(res.message || "Vendor registered successfully"); 
+      setSubmitted(true);
+
+      setTimeout(() => {
+        flip();
+      }, 3000);
+    } else {
+      setRegError(res.message || "Registration failed.");
+    }
+  } catch {
+    setRegError("Server error. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   /* ── STEP BODY ── */
   const stepBody = () => {
@@ -386,7 +401,24 @@ if (name === "country") {
               <Field label="vendor Name" name="vendorName" value={fd.vendorName} onChange={handleChange} required />
             </TwoCol>
 
-            <Field label="Contact Person" name="contactPerson" value={fd.contactPerson} onChange={handleChange} />
+            <TwoCol>
+              <Field
+                label="Vendor Type"
+                name="vendorTypeId"
+                value={fd.vendorTypeId}
+                onChange={handleChange}
+                required
+                as="select"
+              >
+                <option value="" disabled hidden>Select Vendor Type</option>
+                {vendorTypes.map((v) => (
+                  <option key={v.vendorTypeId} value={v.vendorTypeId}>
+                    {v.vendorTypeName}
+                  </option>
+                ))}
+              </Field>
+              <Field label="Contact Person" name="contactPerson" value={fd.contactPerson} onChange={handleChange} />
+            </TwoCol>
 
             <TwoCol>
               <Field label="Mobile No" name="mobileNo" value={fd.mobileNo} onChange={handleChange} required maxLength={10} />
@@ -404,37 +436,37 @@ if (name === "country") {
 
             <TwoCol>
               <Field
-  label="Country"
-  name="country"
-  value={fd.country}
-  onChange={handleChange}
-  required
-  as="select"
->
-  <option value="" disabled hidden>Select Country</option>
- {countries.map((c) => (
-  <option key={c.countryId} value={c.countryName}>
-    {c.countryName}
-  </option>
-))}
-</Field>
+                label="Country"
+                name="country"
+                value={fd.country}
+                onChange={handleChange}
+                required
+                as="select"
+              >
+                <option value="" disabled hidden>Select Country</option>
+                {countries.map((c) => (
+                  <option key={c.countryId} value={c.countryName}>
+                    {c.countryName}
+                  </option>
+                ))}
+              </Field>
 
-             <Field
-  label="State"
-  name="state"
-  value={fd.state}
-  onChange={handleChange}
-  required={!!fd.country}
-  as="select"
-  disabled={!fd.country}
->
-  <option value="" disabled hidden>Select State</option>
-  {states.map((s) => (
-  <option key={s.stateId} value={s.stateName}>
-    {s.stateName}
-  </option>
-))}
-</Field>
+              <Field
+                label="State"
+                name="state"
+                value={fd.state}
+                onChange={handleChange}
+                required={!!fd.country}
+                as="select"
+                disabled={!fd.country}
+              >
+                <option value="" disabled hidden>Select State</option>
+                {states.map((s) => (
+                  <option key={s.stateId} value={s.stateName}>
+                    {s.stateName}
+                  </option>
+                ))}
+              </Field>
             </TwoCol>
 
             <TwoCol>
@@ -591,11 +623,11 @@ if (name === "country") {
                   <h2 className="lr-h1" style={{ fontSize: 20 }}>
                     Registration Complete!
                   </h2>
-                 <p style={{ color: "#888", fontSize: 13, margin: "8px 0 20px" }}>
-  Your account has been created successfully.<br />
-  <b>Username:</b> Your Email ID<br />
-  <b>Password:</b> Your Mobile Number (for first login)
-</p>
+                  <p style={{ color: "#888", fontSize: 13, margin: "8px 0 20px" }}>
+                    Your account has been created successfully.<br />
+                    <b>Username:</b> Your Email ID<br />
+                    <b>Password:</b> Your Mobile Number (for first login)
+                  </p>
                   <button className="lr-btn-main" onClick={flip}>Go to Login</button>
                 </div>
               ) : (
@@ -627,6 +659,7 @@ if (name === "country") {
                   <div className="lr-step-body">{stepBody()}</div>
 
                   {regError && <p className="lr-err">{regError}</p>}
+                  {successMsg && <p className="lr-success">{successMsg}</p>}
 
                   <div className="lr-btn-row">
                     {step > 1 && <button className="lr-btn-prev" onClick={prev}>← Back</button>}

@@ -75,6 +75,9 @@ const Sidebar = () => {
                 <Link className={`ms-link ${isActive("/creatempr") ? "active" : ""}`} to="/creatempr">
                   Create MPR
                 </Link>
+                <Link className={`ms-link ${isActive("/mpr-approval") ? "active" : ""}`} to="/mpr-approval">
+                  MPR Approval
+                </Link>
               </li>
             </ul>
           </li>
