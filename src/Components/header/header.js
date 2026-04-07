@@ -1,10 +1,32 @@
-import React, { useContext } from 'react';
+import React, { useState,useEffect,useRef,useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import notificationImg from "../../assets/images/xs/avatar1.jpg";
 import ProfileImg from "../../assets/images/profile_av.png";
 import './header.css';
 
+
 const Header = () => {
+
+
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const [showLogout, setShowLogout] = useState(false); 
+  const menuRef = useRef(null);
+  
+  useEffect(() => {
+  const handleClickOutside = (e) => {
+    if (menuRef.current && !menuRef.current.contains(e.target)) {
+      setOpen(false); 
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, []);
+
     return(
         <>
             <div className="header">
@@ -253,15 +275,115 @@ const Header = () => {
                                 </div>
                             </div>
                             
-                            {/* Settings Button */}
-                            <div className="setting ms-2">
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#Settingmodal" className="text-secondary hover-primary">
-                                    <i className="icofont-gear-alt fs-5" />
-                                </a>
-                            </div>
-                        </div>
-                        
-                        {/* menu toggler */}
+                           {/* setting */}
+   <div className="setting ms-2 position-relative" ref={menuRef}>
+  <a
+    href=""
+    className="text-secondary hover-primary"
+    onClick={(e) => {
+      e.preventDefault();
+      setOpen(!open); 
+    }}
+  >
+    <i className="icofont-gear-alt fs-5" />
+  </a>
+
+  {/* 🔽 Dropdown */}
+  {open && (
+    <div
+      className="bg-white shadow rounded position-absolute"
+      style={{
+        right: 0,
+        top: "30px",
+        minWidth: "140px",
+        zIndex: 9999,
+      }}
+    >
+      {/* 🔵 Profile */}
+      <div
+        style={{
+          padding: "8px 12px",
+          cursor: "pointer",
+          color: "#0d6efd",
+        }}
+        onClick={() => {
+          setOpen(false);
+          navigate("/profile");
+        }}
+      >
+        Profile
+      </div>
+
+      {/* 🔴 Logout */}
+     <div
+  style={{
+    padding: "8px 12px",
+    cursor: "pointer",
+    color: "red",
+    borderTop: "1px solid #eee",
+  }}
+  onClick={() => setShowLogout(true)}
+>
+  Logout
+</div>
+ </div>
+  )}
+</div>
+ </div>
+ {showLogout && (
+  <div
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      background: "rgba(0,0,0,0.5)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 9999,
+    }}
+  >
+    <div
+      style={{
+        background: "#fff",
+        padding: "30px",
+        borderRadius: "12px",
+        width: "380px",   // 👈 bada size
+        textAlign: "center",
+        boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
+      }}
+    >
+      <h5 style={{ marginBottom: "10px" }}>Confirm Logout</h5>
+
+      <p style={{ fontSize: "15px", color: "#555" }}>
+        Are you sure you want to logout?
+      </p>
+
+      <div className="d-flex justify-content-center gap-3 mt-4">
+        <button
+          className="btn btn-outline-secondary px-3"
+          onClick={() => setShowLogout(false)}
+        >
+         Yes
+        </button>
+
+        <button
+          className="btn btn-danger px-3"
+          onClick={() => {
+            localStorage.clear();
+            
+          }}
+        >
+          No
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+              {/* menu toggler */}
                         <button
                             className="navbar-toggler p-2 border-0 menu-toggle order-3"
                             type="button"
