@@ -397,11 +397,322 @@ const CreateMPR = () => {
   );
 
   return (
-    <div className="container-fluid mt-2 px-2">
-      <div className="card shadow-sm p-2">
-        <div className="bg-light border-bottom">
-          <h4 className="mb-3 text-black">Create MPR</h4>
+    <div className="container-fluid">
+      <div className="mb-4">
+        <h1 className="page-title">Create MPR</h1>
+        <p className="text-muted-soft">Submit a new Material Purchase Request</p>
+      </div>
+
+      {/* Header Form Card */}
+      <div className="card mb-4">
+        <div className="card-header">
+          <h6 className="mb-0 fw-semibold">Request Details</h6>
         </div>
+        <div className="card-body">
+          <form onSubmit={handleSubmit}>
+            <div className="row g-3">
+              <div className="col-md-4">
+                <div className="form-floating">
+                  <input className="form-control" id="mprNo" name="mprNo" placeholder="MPR No" value={mprData.mprNo} onChange={handleFieldChange} />
+                  <label htmlFor="mprNo">MPR No</label>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="form-floating">
+                  <input type="date" className="form-control" id="mprDate" name="mprDate" placeholder="MPR Date" value={mprData.mprDate} onChange={handleFieldChange} />
+                  <label htmlFor="mprDate">MPR Date</label>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="form-floating">
+                  <select className="form-select" id="departmentId" name="departmentId" value={mprData.departmentId} onChange={handleFieldChange}>
+                    <option value="">Select Department</option>
+                    {departments.map((d) => (
+                      <option key={d.departmentId} value={d.departmentId}>{d.departmentName}</option>
+                    ))}
+                  </select>
+                  <label htmlFor="departmentId">Department</label>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="form-floating">
+                  <input className="form-control" id="projectName" name="projectName" placeholder="Project Name" value={mprData.projectName} onChange={handleFieldChange} />
+                  <label htmlFor="projectName">Project Name</label>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="form-floating">
+                  <select className="form-select" id="mprTypeId" name="mprTypeId" value={mprData.mprTypeId} onChange={handleFieldChange}>
+                    <option value="">Select MPR Type</option>
+                    {mprTypes.map((m) => (
+                      <option key={m.typeId} value={m.typeId}>{m.typeName}</option>
+                    ))}
+                  </select>
+                  <label htmlFor="mprTypeId">MPR Type</label>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="form-floating">
+                  <select className="form-select" id="tenderTypeId" name="tenderTypeId" value={mprData.tenderTypeId} onChange={handleFieldChange}>
+                    <option value="">Select Tender Type</option>
+                    {tenderTypes.map((t) => (
+                      <option key={t.tenderTypeId} value={t.tenderTypeId}>{t.tenderName}</option>
+                    ))}
+                  </select>
+                  <label htmlFor="tenderTypeId">Tender Type</label>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="form-floating">
+                  <input className="form-control" id="priority" name="priority" placeholder="Priority" value={mprData.priority} onChange={handleFieldChange} />
+                  <label htmlFor="priority">Priority</label>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="form-floating">
+                  <input type="date" className="form-control" id="requiredByDate" name="requiredByDate" placeholder="Required By" value={mprData.requiredByDate} onChange={handleFieldChange} />
+                  <label htmlFor="requiredByDate">Required By Date</label>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="form-floating">
+                  <input className="form-control" id="deliverySchedule" name="deliverySchedule" placeholder="Delivery Schedule" value={mprData.deliverySchedule} onChange={handleFieldChange} />
+                  <label htmlFor="deliverySchedule">Delivery Schedule</label>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="form-floating">
+                  <input type="number" className="form-control" id="durationDays" name="durationDays" placeholder="Duration Days" value={mprData.durationDays} onChange={handleFieldChange} />
+                  <label htmlFor="durationDays">Duration Days</label>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="form-floating">
+                  <textarea className="form-control" id="specialNotes" name="specialNotes" placeholder="Special Notes" style={{ height: "80px" }} value={mprData.specialNotes} onChange={handleFieldChange}></textarea>
+                  <label htmlFor="specialNotes">Special Notes</label>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="form-floating">
+                  <textarea className="form-control" id="justification" name="justification" placeholder="Justification" style={{ height: "80px" }} value={mprData.justification} onChange={handleFieldChange}></textarea>
+                  <label htmlFor="justification">Justification</label>
+                </div>
+              </div>
+            </div>
+
+            {/* Items Table */}
+            <div className="mt-4">
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <h6 className="section-title mb-0">Items</h6>
+                <button type="button" className="btn btn-sm btn-outline-success" onClick={addRow}>
+                  <i className="bi bi-plus-lg me-1" />Add Row
+                </button>
+              </div>
+              <div className="table-responsive" style={{ overflowX: "auto" }}>
+                <div style={{ maxHeight: "320px", overflowY: "auto" }}>
+                  <table className="table table-bordered table-hover table-sm align-middle" style={{ minWidth: "1500px" }}>
+                    <colgroup>
+                      <col style={{ width: "50px" }} />
+                      <col style={{ width: "110px" }} />
+                      <col style={{ width: "140px" }} />
+                      <col style={{ width: "90px" }} />
+                      <col style={{ width: "190px" }} />
+                      <col style={{ width: "90px" }} />
+                      <col style={{ width: "90px" }} />
+                      <col style={{ width: "110px" }} />
+                      <col style={{ width: "90px" }} />
+                      <col style={{ width: "75px" }} />
+                      <col style={{ width: "140px" }} />
+                      <col style={{ width: "360px" }} />
+                      <col style={{ width: "70px" }} />
+                    </colgroup>
+                    <thead className="table-dark" style={{ position: "sticky", top: 0, zIndex: 1 }}>
+                      <tr>
+                        <th>SR</th>
+                        <th>Item Code</th>
+                        <th>Item Name</th>
+                        <th>UOM</th>
+                        <th>Specification</th>
+                        <th>Qty</th>
+                        <th>Rate</th>
+                        <th>Value</th>
+                        <th>Stock</th>
+                        <th>AMC</th>
+                        <th>Last Purchase</th>
+                        <th>Vendors</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mprData.tableRows.map((row, index) => (
+                        <tr key={index}>
+                          <td>{index + 1}</td>
+                          {["itemCode", "itemName", "uom", "specification", "qty", "rate", "value", "stock", "amc", "lastPurchase"].map((key) => (
+                            <td key={key}>
+                              <input
+                                className="form-control form-control-sm"
+                                type={["qty", "rate", "value", "stock", "amc"].includes(key) ? "number" : key === "lastPurchase" ? "date" : "text"}
+                                name={key}
+                                value={row[key]}
+                                onChange={(e) => handleRowChange(index, e)}
+                              />
+                            </td>
+                          ))}
+                          <td>
+                            <div className="d-flex align-items-center gap-1">
+                              <input className="form-control form-control-sm" readOnly value={row.vendorNames || ""} placeholder="Select Vendors" />
+                              <button type="button" className="btn btn-sm btn-primary" onClick={() => setVendorPopupIndex(index)}>
+                                <i className="bi bi-people" />
+                              </button>
+                            </div>
+                          </td>
+                          <td>
+                            <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => removeRow(index)}>
+                              <i className="bi bi-trash" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div className="d-flex justify-content-end mt-4">
+              <button type="submit" className="btn btn-primary px-4">
+                <i className="bi bi-send me-2" />{mprData.mprId ? "Update MPR" : "Submit MPR"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* MPR List */}
+      <div className="card">
+        <div className="card-header d-flex align-items-center justify-content-between gap-3 flex-wrap">
+          <h6 className="mb-0 fw-semibold">Saved MPRs</h6>
+          <div className="input-group" style={{ maxWidth: "280px" }}>
+            <span className="input-group-text bg-white border-end-0">
+              <i className="bi bi-search text-muted" />
+            </span>
+            <input
+              className="form-control border-start-0"
+              placeholder="Search by MPR No"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>MPR No</th>
+                  <th>Department</th>
+                  <th>Project</th>
+                  <th>Priority</th>
+                  <th className="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedData.map((mpr, i) => {
+                  const departmentName = departments.find(d => d.departmentId === mpr.departmentId)?.departmentName || '';
+                  return (
+                    <tr key={i}>
+                      <td className="fw-semibold text-primary">{mpr.mprNo}</td>
+                      <td>{departmentName}</td>
+                      <td>{mpr.projectName}</td>
+                      <td>
+                        <span className={`badge rounded-pill ${mpr.priority === 'High' ? 'bg-danger' : mpr.priority === 'Medium' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
+                          {mpr.priority}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <button className="btn btn-sm btn-outline-warning" onClick={() => handleEdit(mpr)}>
+                          <i className="bi bi-pencil me-1" />Edit
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {paginatedData.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="text-center py-5 text-muted-soft">
+                      <i className="bi bi-inbox fs-3 d-block mb-2" />No MPRs found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="card-footer d-flex justify-content-between align-items-center">
+          <button className="btn btn-sm btn-outline-secondary" disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>
+            <i className="bi bi-chevron-left" /> Prev
+          </button>
+          <span className="text-muted-soft small">Page {currentPage} of {totalPages}</span>
+          <button className="btn btn-sm btn-outline-secondary" disabled={currentPage === totalPages} onClick={() => setCurrentPage(currentPage + 1)}>
+            Next <i className="bi bi-chevron-right ms-1" />
+          </button>
+        </div>
+      </div>
+
+      {/* Vendor Popup */}
+      {vendorPopupIndex !== null && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "420px", width: "100%", margin: 0 }}>
+            <div className="modal-content">
+              <div className="modal-header">
+                <h6 className="modal-title fw-semibold">Select Vendors</h6>
+                <button type="button" className="btn-close" onClick={() => setVendorPopupIndex(null)} />
+              </div>
+              <div className="modal-body">
+                <div className="input-group mb-3">
+                  <span className="input-group-text bg-white border-end-0">
+                    <i className="bi bi-search text-muted" />
+                  </span>
+                  <input
+                    className="form-control border-start-0"
+                    placeholder="Search vendor…"
+                    value={vendorSearch}
+                    onChange={(e) => setVendorSearch(e.target.value)}
+                  />
+                </div>
+                <div style={{ maxHeight: "260px", overflowY: "auto" }}>
+                  {vendors
+                    .filter((v) => v.vendorName.toLowerCase().includes(vendorSearch.toLowerCase()))
+                    .map((v) => (
+                      <div key={v.vendorId} className="form-check py-1 border-bottom">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id={`vendor-${v.vendorId}`}
+                          checked={mprData.tableRows[vendorPopupIndex]?.vendorIds?.includes(v.vendorId) || false}
+                          onChange={() => toggleVendorSelection(vendorPopupIndex, v.vendorId)}
+                        />
+                        <label className="form-check-label" htmlFor={`vendor-${v.vendorId}`}>
+                          <span className="badge bg-light text-dark me-2">{v.vendorCode}</span>{v.vendorName}
+                        </label>
+                      </div>
+                    ))}
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-primary btn-sm" onClick={() => setVendorPopupIndex(null)}>Done</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default CreateMPR;
+
+/*
 
         <form onSubmit={handleSubmit}>
           <div className="row mb-3">
@@ -766,3 +1077,4 @@ const CreateMPR = () => {
 };
 
 export default CreateMPR;
+*/

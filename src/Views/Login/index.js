@@ -556,6 +556,11 @@ const submitForm = async () => {
           {/* FRONT : LOGIN */}
           <div className="lr-face front">
             <div className="lr-form-side">
+              <div className="lr-brand">
+                <span className="lr-brand-icon"><i className="bi bi-grid-fill" /></span>
+                <span className="lr-brand-text">E-Procurement</span>
+              </div>
+
               <h1 className="lr-h1">Welcome back</h1>
               <p className="lr-subtitle">Sign in to your account</p>
 
@@ -617,6 +622,11 @@ const submitForm = async () => {
             </div>
 
             <div className="lr-form-side reg">
+              <div className="lr-brand">
+                <span className="lr-brand-icon"><i className="bi bi-grid-fill" /></span>
+                <span className="lr-brand-text">E-Procurement</span>
+              </div>
+
               {submitted ? (
                 <div className="lr-success-wrap">
                   <div className="lr-success-icon">✅</div>

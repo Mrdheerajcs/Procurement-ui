@@ -3,17 +3,12 @@ import './footer.css';
 const Footer = () => {
 
     return(
-        <>
-          {/* partial:partials/_footer.html */}
-          <footer className="footer">
-            <div className="d-sm-flex justify-content-center footer-content">
-              <span className="text-muted d-block text-center text-sm-left d-sm-inline-block">
-                Copyright © Arigen Technology 2026
-              </span>
-              
-            </div>
-          </footer>
-        </>
+      <footer className="footer mt-auto">
+        <div className="footer-content d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
+          <span className="text-muted-soft small">© 2026 Arigen Technology. All rights reserved.</span>
+          <span className="small text-muted-soft">Built with Bootstrap 5</span>
+        </div>
+      </footer>
     );
 }
 export default Footer;

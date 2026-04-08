@@ -579,3 +579,263 @@
   .lr-info-skew  { display: none; }
   .lr-two-col    { grid-template-columns: 1fr; }
 }
+
+/* ======================================================
+   MODERN OVERRIDES (Phase 2)
+====================================================== */
+
+.lr-page {
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  background:
+    radial-gradient(circle at top right, #dbeafe 0%, #eef2ff 35%, #f8fafc 100%);
+}
+
+.lr-scene {
+  width: min(1120px, 100%);
+  height: 680px;
+}
+
+.lr-face {
+  border-radius: 1.25rem;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.14);
+  overflow: hidden;
+  background: #fff;
+}
+
+.lr-form-side {
+  width: 58%;
+  background: #fff;
+  padding: 2rem 2rem 1.5rem;
+  overflow-y: auto;
+}
+
+.lr-info-side {
+  width: 42%;
+  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #2563eb 100%);
+  color: #fff;
+  position: relative;
+}
+
+.lr-info-skew,
+.lr-info-skew.right {
+  display: none;
+}
+
+.lr-info-inner {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.lr-h1,
+.lr-reg-h {
+  font-size: 1.65rem;
+  margin-bottom: 0.35rem;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.lr-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #dbeafe;
+  border-radius: 0.8rem;
+  background: #f8fbff;
+}
+
+.lr-brand-icon {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  color: #fff;
+}
+
+.lr-brand-text {
+  font-weight: 700;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: #0f172a;
+  letter-spacing: 0.2px;
+}
+
+.lr-subtitle,
+.lr-reg-sub {
+  margin-bottom: 1.25rem;
+  color: #64748b;
+}
+
+.field-wrap {
+  margin-bottom: 0.85rem;
+}
+
+.field-wrap input,
+.field-wrap select,
+.field-wrap textarea {
+  width: 100%;
+  height: 48px;
+  border: 1px solid #d8e1ee;
+  border-radius: 0.75rem;
+  padding: 0.95rem 0.95rem 0.2rem;
+  background: #fff;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field-wrap input:focus,
+.field-wrap select:focus,
+.field-wrap textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.field-wrap label {
+  left: 0.85rem;
+  color: #64748b;
+  font-size: 0.86rem;
+}
+
+.field-wrap input:focus + label,
+.field-wrap input:not(:placeholder-shown) + label,
+.field-wrap select.has-value + label {
+  color: #1e40af;
+}
+
+.lr-two-col {
+  gap: 0.85rem;
+}
+
+.pwd-toggle {
+  color: #64748b;
+}
+
+.lr-btn-main,
+.lr-btn-submit,
+.lr-btn-next {
+  border: 0;
+  border-radius: 0.75rem;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
+  height: 44px;
+  padding: 0 1rem;
+}
+
+.lr-btn-main:hover,
+.lr-btn-submit:hover,
+.lr-btn-next:hover {
+  background: #1e40af;
+}
+
+.lr-btn-prev,
+.lr-btn-cancel {
+  border-radius: 0.75rem;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  font-weight: 600;
+  height: 44px;
+  padding: 0 1rem;
+}
+
+.lr-btn-ghost {
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  padding: 0.55rem 1.3rem;
+}
+
+.lr-link-txt span {
+  color: #2563eb;
+}
+
+.lr-prog {
+  margin-bottom: 1rem;
+}
+
+.lr-circ {
+  border: 2px solid #cbd5e1;
+  color: #64748b;
+  background: #fff;
+}
+
+.lr-circ.active,
+.lr-circ.done {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+
+.lr-prog-line {
+  background: #e2e8f0;
+}
+
+.lr-prog-fill {
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
+}
+
+.lr-step-hd {
+  color: #0f172a;
+}
+
+.lr-toggle-row {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.75rem;
+  background: #fff;
+}
+
+.lr-err {
+  color: #dc2626;
+  font-size: 0.86rem;
+}
+
+.lr-success {
+  color: #16a34a;
+  font-size: 0.86rem;
+}
+
+@media (max-width: 991px) {
+  .lr-scene {
+    height: auto;
+    perspective: none;
+  }
+
+  .lr-flipper,
+  .lr-flipper.flipped {
+    transform: none !important;
+    transform-style: flat;
+  }
+
+  .lr-face,
+  .lr-face.back {
+    position: relative;
+    transform: none;
+    flex-direction: column-reverse;
+    height: auto;
+    min-height: auto;
+    margin-bottom: 1rem;
+  }
+
+  .lr-form-side,
+  .lr-info-side {
+    width: 100%;
+  }
+
+  .lr-info-side {
+    min-height: 190px;
+  }
+}

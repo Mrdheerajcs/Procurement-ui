@@ -116,11 +116,212 @@ const MPRApproval = () => {
   };
 
   return (
-    <div className="container-fluid mt-4 px-2">
-      <div className="card shadow-sm p-2">
-        <div className="bg-light border-bottom">
-          <h4 className="mb-3 text-black">MPR Approval</h4>
+    <div className="container-fluid">
+      {msg && (
+        <MessagePopup type={msg.type} message={msg.text} duration={4000} onClose={() => setMsg(null)} />
+      )}
+
+      <div className="mb-4">
+        <h1 className="page-title">MPR Approval</h1>
+        <p className="text-muted-soft">Review and approve pending material purchase requests</p>
+      </div>
+
+      {!selectedMPR ? (
+        <div className="card">
+          <div className="card-header d-flex align-items-center justify-content-between gap-3 flex-wrap">
+            <h6 className="mb-0 fw-semibold">Pending Approvals</h6>
+            <div className="input-group" style={{ maxWidth: "320px" }}>
+              <span className="input-group-text bg-white border-end-0">
+                <i className="bi bi-search text-muted" />
+              </span>
+              <input
+                type="search"
+                className="form-control border-start-0"
+                placeholder="Search by MPR No / Dept / Project…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="card-body p-0">
+            {loading ? (
+              <div className="text-center py-5">
+                <div className="spinner-border text-primary" role="status" />
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <table className="table table-hover align-middle mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th>MPR No</th>
+                      <th>Department</th>
+                      <th>Project</th>
+                      <th>Priority</th>
+                      <th>Status</th>
+                      <th className="text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredList.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="text-center py-5 text-muted-soft">
+                          <i className="bi bi-inbox fs-3 d-block mb-2" />No pending MPRs found
+                        </td>
+                      </tr>
+                    )}
+                    {filteredList.map((mpr) => (
+                      <tr key={mpr.mprId}>
+                        <td><span className="fw-semibold text-primary">{mpr.mprNo}</span></td>
+                        <td>{mpr.departmentName || `Dept-${mpr.departmentId}`}</td>
+                        <td>{mpr.projectName}</td>
+                        <td>
+                          <span className={`badge rounded-pill ${mpr.priority === 'High' ? 'bg-danger' : mpr.priority === 'Medium' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
+                            {mpr.priority}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="badge bg-warning text-dark">{getStatusLabel(mpr.status)}</span>
+                        </td>
+                        <td className="text-center">
+                          <button className="btn btn-sm btn-primary" onClick={() => { setSelectedMPR(mpr); setItemActions({}); }}>
+                            <i className="bi bi-folder2-open me-1" />Open
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
+      ) : (
+        <div>
+          <button className="btn btn-outline-secondary btn-sm mb-4" onClick={() => setSelectedMPR(null)}>
+            <i className="bi bi-arrow-left me-2" />Back to List
+          </button>
+
+          {/* MPR Header Card */}
+          <div className="card mb-4">
+            <div className="card-header">
+              <h6 className="mb-0 fw-semibold">MPR Details — {selectedMPR.mprNo}</h6>
+            </div>
+            <div className="card-body">
+              <div className="row g-3">
+                <div className="col-sm-6 col-md-3">
+                  <div className="text-muted-soft small mb-1">MPR Number</div>
+                  <div className="fw-semibold">{selectedMPR.mprNo}</div>
+                </div>
+                <div className="col-sm-6 col-md-3">
+                  <div className="text-muted-soft small mb-1">Date</div>
+                  <div className="fw-semibold">{new Date(selectedMPR.mprDate).toLocaleDateString()}</div>
+                </div>
+                <div className="col-sm-6 col-md-3">
+                  <div className="text-muted-soft small mb-1">Department</div>
+                  <div className="fw-semibold">{selectedMPR.departmentName || `Dept-${selectedMPR.departmentId}`}</div>
+                </div>
+                <div className="col-sm-6 col-md-3">
+                  <div className="text-muted-soft small mb-1">Project</div>
+                  <div className="fw-semibold">{selectedMPR.projectName}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Items Table */}
+          <div className="card">
+            <div className="card-header">
+              <h6 className="mb-0 fw-semibold">Line Items — Approve / Reject</h6>
+            </div>
+            <div className="card-body p-0">
+              <div className="table-responsive">
+                <table className="table table-hover align-middle mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th>SR</th>
+                      <th>Item Code</th>
+                      <th>Item Name</th>
+                      <th>UOM</th>
+                      <th>Specification</th>
+                      <th className="text-end">Qty</th>
+                      <th className="text-end">Rate</th>
+                      <th className="text-end">Value</th>
+                      <th className="text-end">Stock</th>
+                      <th>AMC</th>
+                      <th>Last Purchase</th>
+                      <th>Vendors</th>
+                      <th>Decision</th>
+                      <th>Reason (if rejected)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(selectedMPR.mprDetailResponnces || []).map((row, idx) => {
+                      const action = itemActions[row.mprDetailId] || {};
+                      return (
+                        <tr key={row.mprDetailId || idx}>
+                          <td>{idx + 1}</td>
+                          <td><code>{row.itemCode}</code></td>
+                          <td className="fw-semibold">{row.itemName}</td>
+                          <td>{row.uom}</td>
+                          <td>{row.specification}</td>
+                          <td className="text-end">{row.requestedQty}</td>
+                          <td className="text-end">{row.estimatedRate}</td>
+                          <td className="text-end">{row.estimatedValue}</td>
+                          <td className="text-end">{row.stockAvailable}</td>
+                          <td>{row.avgMonthlyConsumption}</td>
+                          <td>{row.lastPurchaseInfo}</td>
+                          <td>
+                            {row.vendors?.length > 0
+                              ? row.vendors.map((v) => v.vendorName).join(", ")
+                              : <span className="text-muted-soft">—</span>}
+                          </td>
+                          <td style={{ minWidth: "130px" }}>
+                            <select
+                              className={`form-select form-select-sm ${action.status === 'a' ? 'border-success' : action.status === 'r' ? 'border-danger' : ''}`}
+                              value={action.status || ""}
+                              onChange={(e) => handleStatusChange(row.mprDetailId, e.target.value)}
+                            >
+                              <option value="">— Select —</option>
+                              <option value="a">✓ Approve</option>
+                              <option value="r">✗ Reject</option>
+                            </select>
+                          </td>
+                          <td style={{ minWidth: "180px" }}>
+                            {action.status === "r" && (
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                placeholder="Enter reason…"
+                                value={action.reason || ""}
+                                onChange={(e) => handleReasonChange(row.mprDetailId, e.target.value)}
+                              />
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="card-footer d-flex gap-2 justify-content-end">
+              <button className="btn btn-outline-secondary" onClick={() => setSelectedMPR(null)}>
+                <i className="bi bi-arrow-left me-2" />Back
+              </button>
+              <button className="btn btn-success" disabled={!isAllSelected} onClick={handleSubmit}>
+                <i className="bi bi-check2-all me-2" />Submit Decision
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default MPRApproval;
+
+/*
 
         {msg && (
           <MessagePopup
@@ -306,3 +507,4 @@ const MPRApproval = () => {
 };
 
 export default MPRApproval;
+*/

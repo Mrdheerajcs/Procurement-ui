@@ -1,0 +1,63 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+  --app-primary: #2563eb;
+  --app-primary-dark: #1e40af;
+  --app-surface: #ffffff;
+  --app-surface-soft: #f8fafc;
+  --app-border: #e2e8f0;
+  --app-text: #0f172a;
+  --app-muted: #64748b;
+  --app-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --app-radius: 0.9rem;
+}
+
+body {
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--app-text);
+  background: radial-gradient(circle at top right, #dbeafe 0%, #eef2ff 35%, #f8fafc 100%);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  text-decoration: none;
+}
+
+.card {
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  box-shadow: var(--app-shadow);
+}
+
+.table > :not(caption) > * > * {
+  padding: 0.8rem 0.75rem;
+}
+
+.page-title {
+  font-size: clamp(1.1rem, 1.6vw, 1.4rem);
+  font-weight: 700;
+  margin: 0;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.text-muted-soft {
+  color: var(--app-muted) !important;
+}
+
+.app-content-wrap {
+  padding: 1rem;
+}
+
+@media (min-width: 992px) {
+  .app-content-wrap {
+    padding: 1.25rem 1.5rem;
+  }
+}

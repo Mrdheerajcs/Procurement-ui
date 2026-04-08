@@ -1,5 +1,17 @@
-.footer-content{
-    padding: 10px;
-    background: #e7e7e7;
-    border-radius: 6px;
+.footer {
+    padding: 0 1rem 1rem;
+}
+
+.footer-content {
+    padding: 0.9rem 1rem;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid #e2e8f0;
+    border-radius: 0.9rem;
+    backdrop-filter: blur(5px);
+}
+
+@media (min-width: 992px) {
+    .footer {
+        padding: 0 1.5rem 1rem;
+    }
 }

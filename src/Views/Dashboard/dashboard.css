@@ -1,0 +1,38 @@
+.body {
+  margin: 0;
+}
+
+.body .card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.9rem;
+}
+
+.body .card-header {
+  background: transparent;
+}
+
+.body .badge {
+  font-weight: 500;
+}
+
+.body .table thead {
+  background: #f8fafc;
+}
+
+.body .room label {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.6rem;
+  width: 100%;
+  text-align: center;
+  background: #fff;
+}
+
+.body .room input {
+  display: none;
+}
+
+.body .room input:checked + label {
+  border-color: #2563eb;
+  background: #eff6ff;
+}

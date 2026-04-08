@@ -291,9 +291,308 @@ const MPRManagement = () => {
     const totalEstimatedCost = filteredMPRs.reduce((sum, mpr) => sum + mpr.estimatedCost, 0);
 
     return (
-        <div className="content-wrapper">
-            <div className="row">
-                <div className="col-12 grid-margin stretch-card">
+        <div className="container-fluid">
+            {/* Page Header */}
+            <div className="mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div>
+                    <h1 className="page-title">Material Purchase Requests</h1>
+                    <p className="text-muted-soft">Manage and track procurement requests</p>
+                </div>
+                {!showForm && (
+                    <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+                        <i className="bi bi-plus-lg me-2" />New Request
+                    </button>
+                )}
+            </div>
+
+            {!showForm ? (
+                <>
+                    {/* Summary Cards */}
+                    <div className="row g-3 mb-4">
+                        <div className="col-6 col-md-3">
+                            <div className="card h-100">
+                                <div className="card-body d-flex align-items-center gap-3">
+                                    <div className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 44, height: 44, background: "rgba(37,99,235,0.1)" }}>
+                                        <i className="bi bi-clipboard2-check text-primary fs-5" />
+                                    </div>
+                                    <div>
+                                        <div className="text-muted-soft small">Total Requests</div>
+                                        <div className="fw-bold fs-5">{filteredMPRs.length}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-6 col-md-3">
+                            <div className="card h-100">
+                                <div className="card-body d-flex align-items-center gap-3">
+                                    <div className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 44, height: 44, background: "rgba(16,185,129,0.1)" }}>
+                                        <i className="bi bi-currency-rupee text-success fs-5" />
+                                    </div>
+                                    <div>
+                                        <div className="text-muted-soft small">Total Value</div>
+                                        <div className="fw-bold fs-5" style={{ fontSize: "1rem !important" }}>{formatCurrency(totalEstimatedCost)}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-6 col-md-3">
+                            <div className="card h-100">
+                                <div className="card-body d-flex align-items-center gap-3">
+                                    <div className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 44, height: 44, background: "rgba(239,68,68,0.1)" }}>
+                                        <i className="bi bi-exclamation-triangle text-danger fs-5" />
+                                    </div>
+                                    <div>
+                                        <div className="text-muted-soft small">High Priority</div>
+                                        <div className="fw-bold fs-5">{filteredMPRs.filter(m => m.priority === 'High').length}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-6 col-md-3">
+                            <div className="card h-100">
+                                <div className="card-body d-flex align-items-center gap-3">
+                                    <div className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 44, height: 44, background: "rgba(245,158,11,0.1)" }}>
+                                        <i className="bi bi-toggle-on text-warning fs-5" />
+                                    </div>
+                                    <div>
+                                        <div className="text-muted-soft small">Active</div>
+                                        <div className="fw-bold fs-5">{filteredMPRs.filter(m => m.status === 'y').length}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Table Card */}
+                    <div className="card">
+                        <div className="card-header d-flex align-items-center justify-content-between gap-3 flex-wrap">
+                            <h6 className="mb-0 fw-semibold">All Requests</h6>
+                            <div className="input-group" style={{ maxWidth: "300px" }}>
+                                <span className="input-group-text bg-white border-end-0">
+                                    <i className="bi bi-search text-muted" />
+                                </span>
+                                <input
+                                    type="search"
+                                    className="form-control border-start-0"
+                                    placeholder="Search MPRs…"
+                                    value={searchQuery}
+                                    onChange={handleSearch}
+                                />
+                            </div>
+                        </div>
+                        <div className="card-body p-0">
+                            <div className="table-responsive">
+                                <table className="table table-hover align-middle mb-0">
+                                    <thead className="table-light">
+                                        <tr>
+                                            <th>MPR Number</th>
+                                            <th>Department</th>
+                                            <th>Item</th>
+                                            <th className="text-end">Qty</th>
+                                            <th className="text-end">Cost</th>
+                                            <th>Required By</th>
+                                            <th>Priority</th>
+                                            <th>Active</th>
+                                            <th className="text-center">Edit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {currentItems.map((mpr) => (
+                                            <tr key={mpr.id}>
+                                                <td>
+                                                    <div className="fw-semibold text-primary">{mpr.mprNumber}</div>
+                                                    <small className="text-muted-soft">{mpr.requestDate}</small>
+                                                </td>
+                                                <td>{mpr.department}</td>
+                                                <td>{mpr.itemName}</td>
+                                                <td className="text-end">{mpr.quantity} {mpr.unit}</td>
+                                                <td className="text-end">{formatCurrency(mpr.estimatedCost)}</td>
+                                                <td>{mpr.requiredBy}</td>
+                                                <td>{getPriorityBadge(mpr.priority)}</td>
+                                                <td>
+                                                    <div className="form-check form-switch mb-0">
+                                                        <input
+                                                            className="form-check-input"
+                                                            type="checkbox"
+                                                            checked={mpr.status === "y"}
+                                                            onChange={() => handleSwitchChange(mpr.id, mpr.status === "y" ? "n" : "y")}
+                                                            id={`switch-${mpr.id}`}
+                                                        />
+                                                    </div>
+                                                </td>
+                                                <td className="text-center">
+                                                    <button
+                                                        className="btn btn-sm btn-outline-primary"
+                                                        onClick={() => handleEdit(mpr)}
+                                                        disabled={mpr.status !== "y"}
+                                                        title="Edit"
+                                                    >
+                                                        <i className="bi bi-pencil" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {filteredMPRs.length === 0 && (
+                                            <tr>
+                                                <td colSpan={9} className="text-center py-5 text-muted-soft">
+                                                    <i className="bi bi-inbox fs-3 d-block mb-2" />No requests found
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {filteredMPRs.length > 0 && (
+                            <div className="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <small className="text-muted-soft">
+                                    Showing {((currentPage - 1) * itemsPerPage) + 1}–{Math.min(currentPage * itemsPerPage, filteredMPRs.length)} of {filteredMPRs.length}
+                                </small>
+                                <div className="d-flex align-items-center gap-2">
+                                    <ul className="pagination pagination-sm mb-0">
+                                        <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+                                            <button className="page-link" onClick={() => setCurrentPage(currentPage - 1)}>‹</button>
+                                        </li>
+                                        {renderPagination()}
+                                        <li className={`page-item ${currentPage === filteredTotalPages ? "disabled" : ""}`}>
+                                            <button className="page-link" onClick={() => setCurrentPage(currentPage + 1)}>›</button>
+                                        </li>
+                                    </ul>
+                                    <input
+                                        type="number"
+                                        className="form-control form-control-sm"
+                                        placeholder="Page #"
+                                        style={{ width: "80px" }}
+                                        value={pageInput}
+                                        onChange={(e) => setPageInput(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && handlePageNavigation()}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </>
+            ) : (
+                /* Edit / Add Form */
+                <div className="card">
+                    <div className="card-header d-flex align-items-center justify-content-between">
+                        <h6 className="mb-0 fw-semibold">{editingMPR ? "Edit Request" : "New Request"}</h6>
+                        <button className="btn btn-outline-secondary btn-sm" onClick={() => {
+                            setShowForm(false);
+                            setEditingMPR(null);
+                            setFormData({ mprNumber: "", department: "", itemName: "", quantity: "", unit: "", estimatedCost: "", requiredBy: "", priority: "Normal", description: "" });
+                        }}>
+                            <i className="bi bi-arrow-left me-1" />Back
+                        </button>
+                    </div>
+                    <div className="card-body">
+                        <form className="row g-3" onSubmit={handleSave}>
+                            <div className="col-md-6">
+                                <div className="form-floating">
+                                    <input type="text" className="form-control" id="mprNumber" placeholder="MPR/2025/XXX" value={formData.mprNumber} onChange={handleInputChange} required />
+                                    <label htmlFor="mprNumber">MPR Number</label>
+                                </div>
+                            </div>
+                            <div className="col-md-6">
+                                <div className="form-floating">
+                                    <select className="form-select" id="department" value={formData.department} onChange={handleInputChange} required>
+                                        <option value="">Select department</option>
+                                        <option value="IT Department">IT Department</option>
+                                        <option value="HR Department">HR Department</option>
+                                        <option value="Finance">Finance</option>
+                                        <option value="Operations">Operations</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="Admin">Admin</option>
+                                    </select>
+                                    <label htmlFor="department">Department</label>
+                                </div>
+                            </div>
+                            <div className="col-md-6">
+                                <div className="form-floating">
+                                    <input type="text" className="form-control" id="itemName" placeholder="Item Name" value={formData.itemName} onChange={handleInputChange} required />
+                                    <label htmlFor="itemName">Item Name</label>
+                                </div>
+                            </div>
+                            <div className="col-md-3">
+                                <div className="form-floating">
+                                    <input type="number" className="form-control" id="quantity" placeholder="Quantity" value={formData.quantity} onChange={handleInputChange} required />
+                                    <label htmlFor="quantity">Quantity</label>
+                                </div>
+                            </div>
+                            <div className="col-md-3">
+                                <div className="form-floating">
+                                    <select className="form-select" id="unit" value={formData.unit} onChange={handleInputChange}>
+                                        <option value="Units">Units</option>
+                                        <option value="Pieces">Pieces</option>
+                                        <option value="Reams">Reams</option>
+                                        <option value="License">License</option>
+                                    </select>
+                                    <label htmlFor="unit">Unit</label>
+                                </div>
+                            </div>
+                            <div className="col-md-6">
+                                <div className="form-floating">
+                                    <input type="number" className="form-control" id="estimatedCost" placeholder="Estimated Cost" value={formData.estimatedCost} onChange={handleInputChange} required />
+                                    <label htmlFor="estimatedCost">Estimated Cost (INR)</label>
+                                </div>
+                            </div>
+                            <div className="col-md-6">
+                                <div className="form-floating">
+                                    <input type="date" className="form-control" id="requiredBy" placeholder="Required By" value={formData.requiredBy} onChange={handleInputChange} required />
+                                    <label htmlFor="requiredBy">Required By</label>
+                                </div>
+                            </div>
+                            <div className="col-md-6">
+                                <div className="form-floating">
+                                    <select className="form-select" id="priority" value={formData.priority} onChange={handleInputChange}>
+                                        <option value="High">High</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="Normal">Normal</option>
+                                    </select>
+                                    <label htmlFor="priority">Priority</label>
+                                </div>
+                            </div>
+                            <div className="col-12">
+                                <div className="form-floating">
+                                    <textarea className="form-control" id="description" placeholder="Description" style={{ height: "80px" }} value={formData.description} onChange={handleInputChange}></textarea>
+                                    <label htmlFor="description">Description</label>
+                                </div>
+                            </div>
+                            <div className="col-12 d-flex justify-content-end gap-2">
+                                <button type="button" className="btn btn-outline-secondary" onClick={() => { setShowForm(false); setEditingMPR(null); }}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={!isFormValid}>
+                                    <i className="bi bi-check2 me-2" />Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirm Dialog */}
+            {confirmDialog.isOpen && (
+                <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.45)' }}>
+                    <div className="modal-dialog modal-dialog-centered modal-sm">
+                        <div className="modal-content">
+                            <div className="modal-body text-center py-4">
+                                <i className="bi bi-question-circle fs-1 text-warning d-block mb-3" />
+                                <p className="mb-0">Change status of this request?</p>
+                            </div>
+                            <div className="modal-footer justify-content-center gap-2 py-2">
+                                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => handleConfirm(false)}>No, Cancel</button>
+                                <button type="button" className="btn btn-primary btn-sm" onClick={() => handleConfirm(true)}>Yes, Confirm</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
+
+export default MPRManagement;
+
+/*
                     <div className="card form-card">
                         <div className="card-header d-flex justify-content-between align-items-center" style={{ backgroundColor: '#f8f9fa', borderBottom: '1px solid #dee2e6' }}>
                             <div>
@@ -364,7 +663,7 @@ const MPRManagement = () => {
                         <div className="card-body">
                             {!showForm ? (
                                 <>
-                                    {/* Summary Cards */}
+                                    {/* Summary Cards * /}
                                     <div className="row mb-4">
                                         <div className="col-md-3">
                                             <div className="card" style={{ backgroundColor: '#fff', border: '1px solid #dee2e6' }}>
@@ -400,7 +699,7 @@ const MPRManagement = () => {
                                         </div>
                                     </div>
 
-                                    {/* Table */}
+                                    {/* Table * /}
                                     <div className="table-responsive">
                                         <table className="table table-sm table-striped table-hover">
                                             <thead style={{ backgroundColor: '#f8f9fa' }}>
@@ -462,7 +761,7 @@ const MPRManagement = () => {
                                             </div>
                                         )}
 
-                                        {/* Pagination */}
+                                        {/* Pagination * /}
                                         {filteredMPRs.length > 0 && (
                                             <div className="d-flex justify-content-between align-items-center mt-3">
                                                 <small className="text-muted">
@@ -634,7 +933,7 @@ const MPRManagement = () => {
                                 </form>
                             )}
                             
-                            {/* Confirm Dialog */}
+                            {/* Confirm Dialog * /}
                             {confirmDialog.isOpen && (
                                 <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
                                     <div className="modal-dialog modal-dialog-centered modal-sm">
@@ -659,3 +958,4 @@ const MPRManagement = () => {
 }
 
 export default MPRManagement;
+*/

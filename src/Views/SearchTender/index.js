@@ -83,132 +83,191 @@ const SearchTender = () => {
   const handleBack = () => setSelectedTender(null);
 
   return (
-   <div className="container-fluid mt-2 px-2">
+    <div className="container-fluid">
+      <div className="mb-4">
+        <h1 className="page-title">Search Tender</h1>
+        <p className="text-muted-soft">Find and view published tenders</p>
+      </div>
+
       {selectedTender ? (
-        <div className="border border-secondary rounded p-4">
-          {/* Back + Heading */}
-          <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
-            <h4 className="mb-0">Tender Details</h4>
-            <button className="btn btn-secondary" onClick={handleBack}>← Back</button>
+        <div>
+          <button className="btn btn-outline-secondary btn-sm mb-4" onClick={handleBack}>
+            <i className="bi bi-arrow-left me-2" />Back to Results
+          </button>
+
+          {/* Tender Header Card */}
+          <div className="card mb-4">
+            <div className="card-header">
+              <h6 className="mb-0 fw-semibold">Tender Details — {selectedTender.tenderNo}</h6>
+            </div>
+            <div className="card-body">
+              <div className="row g-3">
+                <div className="col-sm-6 col-md-3">
+                  <div className="text-muted-soft small mb-1">MPR No</div>
+                  <div className="fw-semibold">{selectedTender.mprNo}</div>
+                </div>
+                <div className="col-sm-6 col-md-3">
+                  <div className="text-muted-soft small mb-1">Project</div>
+                  <div className="fw-semibold">{selectedTender.project}</div>
+                </div>
+                <div className="col-sm-6 col-md-3">
+                  <div className="text-muted-soft small mb-1">Department</div>
+                  <div className="fw-semibold">{selectedTender.department}</div>
+                </div>
+                <div className="col-sm-6 col-md-3">
+                  <div className="text-muted-soft small mb-1">Priority</div>
+                  <span className={`badge rounded-pill ${selectedTender.priority === 'High' ? 'bg-danger' : selectedTender.priority === 'Medium' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
+                    {selectedTender.priority}
+                  </span>
+                </div>
+                <div className="col-sm-6 col-md-3">
+                  <div className="text-muted-soft small mb-1">Justification</div>
+                  <div className="fw-semibold">{selectedTender.justification}</div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-3 d-flex flex-wrap gap-4">
-            <strong>MPR No:</strong> {selectedTender.mprNo}
-            <strong>Project:</strong> {selectedTender.project}
-            <strong>Department:</strong> {selectedTender.department}
-        <strong>Priority:</strong> {selectedTender.priority}
-            <strong>Justification:</strong> {selectedTender.justification}
+          {/* Items Table */}
+          <div className="card mb-4">
+            <div className="card-header">
+              <h6 className="mb-0 fw-semibold">Tender Items</h6>
+            </div>
+            <div className="card-body p-0">
+              <div className="table-responsive">
+                <table className="table table-hover align-middle mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Sr</th>
+                      <th>Item Code</th>
+                      <th>Item Name</th>
+                      <th>UOM</th>
+                      <th>Specification</th>
+                      <th className="text-end">Qty</th>
+                      <th className="text-end">Rate</th>
+                      <th className="text-end">Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedTender.items.map((item, idx) => (
+                      <tr key={idx}>
+                        <td>{idx + 1}</td>
+                        <td><code>{item.itemCode}</code></td>
+                        <td className="fw-semibold">{item.itemName}</td>
+                        <td>{item.uom}</td>
+                        <td>{item.specification}</td>
+                        <td className="text-end">{item.qty}</td>
+                        <td className="text-end">{item.rate}</td>
+                        <td className="text-end">{item.value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-4">
-            <h5>Tender Items</h5>
-            <table className="table table-bordered table-striped">
-              <thead className="table-light">
-                <tr>
-                  <th>Sr</th>
-                  <th>Item Code</th>
-                  <th>Item Name</th>
-                  <th>UOM</th>
-                  <th>Specification</th>
-                  <th>Qty</th>
-                  <th>Rate</th>
-                  <th>Value</th>
-                 
-                </tr>
-              </thead>
-              <tbody>
-                {selectedTender.items.map((item, idx) => (
-                  <tr key={idx}>
-                    <td>{idx + 1}</td>
-                    <td>{item.itemCode}</td>
-                    <td>{item.itemName}</td>
-                    <td>{item.uom}</td>
-                    <td>{item.specification}</td>
-                    <td>{item.qty}</td>
-                    <td>{item.rate}</td>
-                    <td>{item.value}</td>
-                    
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-4">
-            <h5>Downloads</h5>
-            <ul>
-              <li>
-                <a href={selectedTender.boqPDF} download className="text-primary" style={{ textDecoration: "underline", cursor: "pointer" }}>
-                  BOQ.pdf 
+          {/* Downloads */}
+          <div className="card">
+            <div className="card-header">
+              <h6 className="mb-0 fw-semibold"><i className="bi bi-download me-2 text-primary" />Downloads</h6>
+            </div>
+            <div className="card-body">
+              <div className="d-flex gap-3 flex-wrap">
+                <a href={selectedTender.boqPDF} download className="btn btn-outline-primary btn-sm">
+                  <i className="bi bi-file-earmark-pdf me-2" />BOQ.pdf
                 </a>
-              </li>
-              <li>
-                <a href={selectedTender.specPDF} download className="text-primary" style={{ textDecoration: "underline", cursor: "pointer" }}>
-                  Specification.pdf 
+                <a href={selectedTender.specPDF} download className="btn btn-outline-primary btn-sm">
+                  <i className="bi bi-file-earmark-pdf me-2" />Specification.pdf
                 </a>
-              </li>
-            </ul>
+              </div>
+            </div>
           </div>
         </div>
       ) : (
         <>
-        
-          <div className="border border-secondary rounded p-4 mb-4">
-            <h4 className="mb-3">Search Tender</h4>
-            <div className="row mb-4">
-              <div className="col-md-3">
-                <label>Date</label>
-                <input type="date" name="date" min={today} className="form-control" onChange={handleChange}/>
-              </div>
-              <div className="col-md-3">
-                <label>Tender No</label>
-                <input type="text" name="tenderNo" placeholder="Enter Tender No" className="form-control" onChange={handleChange}/>
-              </div>
-              <div className="col-md-3">
-                <label>Department</label>
-                <select name="department" className="form-select" onChange={handleChange}>
-                  <option value="">Select</option>
-                  <option value="IT">IT</option>
-                  <option value="HR">HR</option>
-                  <option value="Finance">Finance</option>
-                </select>
-              </div>
-              <div className="col-md-3 d-flex align-items-end">
-                <button className="btn btn-primary w-100">Search</button>
+          {/* Filter Card */}
+          <div className="card mb-4">
+            <div className="card-header">
+              <h6 className="mb-0 fw-semibold"><i className="bi bi-funnel me-2 text-primary" />Filter Tenders</h6>
+            </div>
+            <div className="card-body">
+              <div className="row g-3 align-items-end">
+                <div className="col-md-3">
+                  <div className="form-floating">
+                    <input type="date" className="form-control" id="filterDate" name="date" min={today} placeholder="Date" onChange={handleChange} />
+                    <label htmlFor="filterDate">Date From</label>
+                  </div>
+                </div>
+                <div className="col-md-3">
+                  <div className="form-floating">
+                    <input type="text" className="form-control" id="filterTenderNo" name="tenderNo" placeholder="Tender No" onChange={handleChange} />
+                    <label htmlFor="filterTenderNo">Tender No</label>
+                  </div>
+                </div>
+                <div className="col-md-3">
+                  <div className="form-floating">
+                    <select className="form-select" id="filterDept" name="department" onChange={handleChange}>
+                      <option value="">All Departments</option>
+                      <option value="IT">IT</option>
+                      <option value="HR">HR</option>
+                      <option value="Finance">Finance</option>
+                    </select>
+                    <label htmlFor="filterDept">Department</label>
+                  </div>
+                </div>
+                <div className="col-md-3">
+                  <button className="btn btn-primary w-100">
+                    <i className="bi bi-search me-2" />Search
+                  </button>
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Search Table */}
-            <table className="table table-bordered">
-              <thead className="table-light">
-                <tr>
-                  <th>Sr</th>
-                  <th>Date</th>
-                  <th>Tender No</th>
-                  <th>Department</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.length > 0 ? (
-                  result.map((item, index) => (
-                    <tr key={item.id} style={{ cursor: "pointer" }} onClick={() => handleView(item)}>
-                      <td>{index + 1}</td>
-                      <td>{item.date}</td>
-                      <td>{item.tenderNo}</td>
-                      <td>{item.department}</td>
-                      <td>
-                        <button className="btn btn-sm btn-success" onClick={(e) => { e.stopPropagation(); handleView(item); }}>View Tender</button>
-                      </td>
+          {/* Results Table */}
+          <div className="card">
+            <div className="card-header">
+              <h6 className="mb-0 fw-semibold">Results <span className="badge bg-primary ms-2">{result.length}</span></h6>
+            </div>
+            <div className="card-body p-0">
+              <div className="table-responsive">
+                <table className="table table-hover align-middle mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Sr</th>
+                      <th>Date</th>
+                      <th>Tender No</th>
+                      <th>Department</th>
+                      <th className="text-center">Action</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="5" className="text-center">No Data Found</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {result.length > 0 ? (
+                      result.map((item, index) => (
+                        <tr key={item.id} style={{ cursor: "pointer" }} onClick={() => handleView(item)}>
+                          <td>{index + 1}</td>
+                          <td>{item.date}</td>
+                          <td><span className="fw-semibold text-primary">{item.tenderNo}</span></td>
+                          <td>{item.department}</td>
+                          <td className="text-center">
+                            <button className="btn btn-sm btn-outline-primary" onClick={(e) => { e.stopPropagation(); handleView(item); }}>
+                              <i className="bi bi-eye me-1" />View
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="text-center py-5 text-muted-soft">
+                          <i className="bi bi-inbox fs-3 d-block mb-2" />No tenders found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </>
       )}

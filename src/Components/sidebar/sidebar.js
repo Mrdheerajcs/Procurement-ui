@@ -2,35 +2,52 @@ import React, { useState, useEffect } from "react";
 import "./sidebar.css";
 import { Link, useLocation } from "react-router-dom";
 
-const Sidebar = () => {
+const menuConfig = [
+  {
+    key: "dashboard",
+    title: "Dashboard",
+    icon: "bi-speedometer2",
+    items: [{ label: "Overview", to: "/dashboard" }],
+  },
+  {
+    key: "mpr",
+    title: "MPR Management",
+    icon: "bi-clipboard2-check",
+    items: [
+      { label: "MPR List", to: "/mpr-list" },
+      { label: "Create MPR", to: "/creatempr" },
+      { label: "MPR Approval", to: "/mpr-approval" },
+      { label: "MPR History", to: "/mpr-history" },
+    ],
+  },
+  {
+    key: "tender",
+    title: "Tender",
+    icon: "bi-megaphone",
+    items: [
+      { label: "Publish Tender", to: "/publishtender" },
+      { label: "Search Tender", to: "/searchtender" },
+    ],
+  },
+  {
+    key: "profile",
+    title: "Profile",
+    icon: "bi-person-circle",
+    items: [{ label: "My Profile", to: "/profile" }],
+  },
+];
+
+const Sidebar = ({ collapsed, mobileOpen, onCloseMobile }) => {
   const location = useLocation();
   const [openMenu, setOpenMenu] = useState("");
 
- useEffect(() => {
-  if (location.pathname.startsWith("/dashboard")) setOpenMenu("dashboard");
-  else if (
-    location.pathname.startsWith("/creatempr") ||
-    location.pathname.startsWith("/mpr-approval") ||
-    location.pathname.startsWith("/mpr-history")
-  ) {
-    setOpenMenu("mpr");
-  } else if (location.pathname.startsWith("/tender")) setOpenMenu("tender");
-  else if (location.pathname.startsWith("/publishtender")) setOpenMenu("publishtender");
-  else if (
-    location.pathname.startsWith("/purchase-orders") ||
-    location.pathname.startsWith("/grn") ||
-    location.pathname.startsWith("/inventory")
-  ) {
-    setOpenMenu("procurement");
-  } else if (
-    location.pathname.startsWith("/vendor-dashboard") ||
-    location.pathname.startsWith("/contracts")
-  ) {
-    setOpenMenu("vendor");
-  } else {
-    setOpenMenu("");
-  }
-}, [location.pathname]);
+  useEffect(() => {
+    const activeGroup = menuConfig.find((section) =>
+      section.items.some((item) => location.pathname.startsWith(item.to))
+    );
+
+    setOpenMenu(activeGroup?.key || "");
+  }, [location.pathname]);
 
   const toggleMenu = (menu) => {
     setOpenMenu((prev) => (prev === menu ? "" : menu));
@@ -39,119 +56,52 @@ const Sidebar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="sidebar px-4 py-4 py-md-5 me-0">
-      <div className="d-flex flex-column h-100">
-
-        {/* Logo */}
-        <Link to="/dashboard" className="mb-0 brand-icon">
+    <aside
+      className={`app-sidebar ${collapsed ? "collapsed" : ""} ${mobileOpen ? "open" : ""}`}
+      aria-label="Sidebar navigation"
+    >
+      <div className="app-sidebar-inner">
+        <Link to="/dashboard" className="brand-icon" onClick={onCloseMobile}>
           <span className="logo-icon">
-            <i className="icofont-file-document fs-2" />
+            <i className="bi bi-grid-1x2-fill" />
           </span>
-          <span className="logo-text">E-procurement</span>
+          <span className="logo-text">E-Procurement</span>
         </Link>
 
-        <ul className="menu-list flex-grow-1 mt-3">
+        <ul className="menu-list">
+          {menuConfig.map((section) => (
+            <li
+              key={section.key}
+              className={`collapsed ${openMenu === section.key ? "active" : ""}`}
+            >
+              <button
+                type="button"
+                className="m-link"
+                onClick={() => toggleMenu(section.key)}
+              >
+                <i className={`bi ${section.icon}`} />
+                <span>{section.title}</span>
+                <i className="bi bi-chevron-down arrow" />
+              </button>
 
-          <li className={`collapsed ${openMenu === "dashboard" ? "active" : ""}`}>
-            <div className={`m-link ${isActive("/dashboard") ? "active" : ""}`} onClick={() => toggleMenu("dashboard")}>
-              <i className="icofont-ui-home fs-5" />
-              <span>Dashboard</span>
-              <span className="arrow icofont-rounded-down ms-auto fs-5" />
-            </div>
-
-            <ul className={`sub-menu ${openMenu === "dashboard" ? "show" : ""}`}>
-              <li>
-                <Link className={`ms-link ${isActive("/dashboard") ? "active" : ""}`} to="/dashboard">
-                  Procurement Dashboard
-                </Link>
-              </li>
-            </ul>
-          </li>
-
-          <li className={`collapsed ${openMenu === "mpr" ? "active" : ""}`}>
-            <div className="m-link" onClick={() => toggleMenu("mpr")}>
-              <i className="icofont-file-alt fs-5" />
-              <span>MPR Management</span>
-              <span className="arrow icofont-rounded-down ms-auto fs-5" />
-            </div>
-
-            <ul className={`sub-menu ${openMenu === "mpr" ? "show" : ""}`}>
-              <li>
-                <Link className={`ms-link ${isActive("/creatempr") ? "active" : ""}`} to="/creatempr">
-                  Create MPR
-                </Link>
-                <Link className={`ms-link ${isActive("/mpr-approval") ? "active" : ""}`} to="/mpr-approval">
-                  MPR Approval
-                </Link>
-                <Link className={`ms-link ${isActive("/mpr-history") ? "active" : ""}`} to="/mpr-history">
-                  MPR History
-                </Link>
-              </li>
-            </ul>
-          </li>
-
-          <li className={`collapsed ${openMenu === "tender" ? "active" : ""}`}>
-            <div className="m-link" onClick={() => toggleMenu("tender")}>
-              <i className="icofont-file-alt fs-5" />
-              <span>Tender Management</span>
-              <span className="arrow icofont-rounded-down ms-auto fs-5" />
-
-            </div>
-
-            <ul className={`sub-menu ${openMenu === "tender" ? "show" : ""}`}>
-              <li><Link className={`ms-link ${isActive("/tender-list") ? "active" : ""}`} to="/tender-list">All Tenders</Link></li>
-              <li><Link className={`ms-link ${isActive("/create-tender") ? "active" : ""}`} to="/create-tender">Create Tender</Link></li>
-              <li><Link className={`ms-link ${isActive("/prebid-queries") ? "active" : ""}`} to="/prebid-queries">Pre-Bid Queries</Link></li>
-              <li><Link className={`ms-link ${isActive("/bid-list") ? "active" : ""}`} to="/bid-list">Bid Management</Link></li>
-              <li><Link className={`ms-link ${isActive("/evaluation") ? "active" : ""}`} to="/evaluation">Evaluation & Award</Link></li>
-               <li><Link className={`ms-link ${isActive("/publishtender") ? "active" : ""}`} to="/publishtender">Publish Tender</Link></li>
-            </ul>
-          </li>
-
-          <li className={`collapsed ${openMenu === "procurement" ? "active" : ""}`}>
-            <div className="m-link" onClick={() => toggleMenu("procurement")}>
-              <i className="icofont-shopping-cart fs-5" />
-              <span>Procurement Ops</span>
-              <span className="arrow icofont-rounded-down ms-auto fs-5" />
-            </div>
-
-            <ul className={`sub-menu ${openMenu === "procurement" ? "show" : ""}`}>
-              <li><Link className={`ms-link ${isActive("/purchase-orders") ? "active" : ""}`} to="/purchase-orders">Purchase Orders</Link></li>
-              <li><Link className={`ms-link ${isActive("/grn") ? "active" : ""}`} to="/grn">Goods Receipt (GRN)</Link></li>
-              <li><Link className={`ms-link ${isActive("/inventory") ? "active" : ""}`} to="/inventory">Inventory Management</Link></li>
-            </ul>
-          </li>
-
-          <li className={`collapsed ${openMenu === "vendor" ? "active" : ""}`}>
-            <div className="m-link" onClick={() => toggleMenu("vendor")}>
-              <i className="icofont-store fs-5" />
-              <span>Vendor Relations</span>
-              <span className="arrow icofont-rounded-down ms-auto fs-5" />
-            </div>
-
-            <ul className={`sub-menu ${openMenu === "vendor" ? "show" : ""}`}>
-              <li><Link className={`ms-link ${isActive("/vendor-dashboard") ? "active" : ""}`} to="/vendor-dashboard">Vendor Portal</Link></li>
-              <li><Link className={`ms-link ${isActive("/contracts") ? "active" : ""}`} to="/contracts">Contracts & Payments</Link></li>
-            </ul>
-          </li>
-
-          <li>
-            <Link className={`m-link ${isActive("/activity-logs") ? "active" : ""}`} to="/activity-logs">
-              <i className="icofont-history fs-5" />
-              <span>Audit Logs</span>
-            </Link>
-          </li>
-
+              <ul className={`sub-menu ${openMenu === section.key ? "show" : ""}`}>
+                {section.items.map((item) => (
+                  <li key={item.to}>
+                    <Link
+                      className={`ms-link ${isActive(item.to) ? "active" : ""}`}
+                      to={item.to}
+                      onClick={onCloseMobile}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
         </ul>
-
-        <button type="button" className="btn btn-link sidebar-mini-btn text-light">
-          <span className="ms-2">
-            <i className="icofont-bubble-right" />
-          </span>
-        </button>
-
       </div>
-    </div>
+    </aside>
   );
 };
 
