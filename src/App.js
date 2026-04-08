@@ -13,6 +13,7 @@ const PublishTender = lazy(() => import("./Views/PublishTender"));
 const SearchTender = lazy(() => import("./Views/SearchTender"));
 const MPRApproval = lazy(() => import("./Views/MPRApproval"));
 const Profile = lazy(() => import("./Views/Profile"));
+const MPRHistory = lazy(() => import("./Views/MPRHistory"));
 
 
 const Loader = () => (
@@ -45,6 +46,7 @@ function App() {
                <Route path='/searchtender' element ={<SearchTender/>}/>
                <Route path='/mpr-approval' element={<MPRApproval/>}/>
                <Route path='/profile' element={<Profile/>}/>
+                <Route path='/mpr-history' element={<MPRHistory/>}/>
               </Route>
 
             </Route>

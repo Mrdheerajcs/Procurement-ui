@@ -6,26 +6,31 @@ const Sidebar = () => {
   const location = useLocation();
   const [openMenu, setOpenMenu] = useState("");
 
-  useEffect(() => {
-    if (location.pathname.startsWith("/dashboard")) setOpenMenu("dashboard");
-    else if (location.pathname.startsWith("/creatempr")) setOpenMenu("mpr");
-    else if (location.pathname.startsWith("/tender")) setOpenMenu("tender");
-    else if (location.pathname.startsWith("/publishtender"))setOpenMenu("publishtender");
-    else if (
-      location.pathname.startsWith("/purchase-orders") ||
-      location.pathname.startsWith("/grn") ||
-      location.pathname.startsWith("/inventory")
-    ) {
-      setOpenMenu("procurement");
-    } else if (
-      location.pathname.startsWith("/vendor-dashboard") ||
-      location.pathname.startsWith("/contracts")
-    ) {
-      setOpenMenu("vendor");
-    } else {
-      setOpenMenu("");
-    }
-  }, [location.pathname]);
+ useEffect(() => {
+  if (location.pathname.startsWith("/dashboard")) setOpenMenu("dashboard");
+  else if (
+    location.pathname.startsWith("/creatempr") ||
+    location.pathname.startsWith("/mpr-approval") ||
+    location.pathname.startsWith("/mpr-history")
+  ) {
+    setOpenMenu("mpr");
+  } else if (location.pathname.startsWith("/tender")) setOpenMenu("tender");
+  else if (location.pathname.startsWith("/publishtender")) setOpenMenu("publishtender");
+  else if (
+    location.pathname.startsWith("/purchase-orders") ||
+    location.pathname.startsWith("/grn") ||
+    location.pathname.startsWith("/inventory")
+  ) {
+    setOpenMenu("procurement");
+  } else if (
+    location.pathname.startsWith("/vendor-dashboard") ||
+    location.pathname.startsWith("/contracts")
+  ) {
+    setOpenMenu("vendor");
+  } else {
+    setOpenMenu("");
+  }
+}, [location.pathname]);
 
   const toggleMenu = (menu) => {
     setOpenMenu((prev) => (prev === menu ? "" : menu));
@@ -77,6 +82,9 @@ const Sidebar = () => {
                 </Link>
                 <Link className={`ms-link ${isActive("/mpr-approval") ? "active" : ""}`} to="/mpr-approval">
                   MPR Approval
+                </Link>
+                <Link className={`ms-link ${isActive("/mpr-history") ? "active" : ""}`} to="/mpr-history">
+                  MPR History
                 </Link>
               </li>
             </ul>

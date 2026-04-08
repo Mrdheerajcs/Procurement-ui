@@ -29,7 +29,6 @@ const CreateMPR = () => {
         lastPurchase: "",
         vendorIds: [],
         vendorNames: "",
-        status: "",
       },
     ],
   });
@@ -111,28 +110,28 @@ const CreateMPR = () => {
 
 
   useEffect(() => {
-  fetchMprList();
-}, []);
+    fetchMprList();
+  }, []);
 
-const fetchMprList = async () => {
-  try {
-    const res = await apiClient.get(
-      "/api/mpr/getallbyStatus",
-      {
-        params: { status: "n" } 
+  const fetchMprList = async () => {
+    try {
+      const res = await apiClient.get(
+        "/api/mpr/getallbyStatus",
+        {
+          params: { status: "n" }
+        }
+      );
+
+      if (res.status === "SUCCESS") {
+        setMprList(res.data);
+      } else {
+        console.error("Failed to fetch MPR List:", res.message);
       }
-    );
-
-    if (res.status === "SUCCESS") {
-      setMprList(res.data);
-    } else {
-      console.error("Failed to fetch MPR List:", res.message);
+    } catch (err) {
+      console.error("Error fetching MPR List:", err);
+      setLoginError(err.message || "Failed to fetch MPR List");
     }
-  } catch (err) {
-    console.error("Error fetching MPR List:", err);
-    setLoginError(err.message || "Failed to fetch MPR List");
-  }
-};
+  };
 
   const handleFieldChange = (e) => {
     const { name, value } = e.target;
@@ -157,7 +156,6 @@ const fetchMprList = async () => {
           lastPurchase: "",
           vendorIds: [],
           vendorNames: "",
-          status: "",
         },
       ],
     });
@@ -200,58 +198,7 @@ const fetchMprList = async () => {
     setMprData({ ...mprData, tableRows: rows });
   };
 
-  // ======= Submit Handler with fixed payload =======
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    // Map tableRows into mprDetailRequests
-    const mprDetailRequests = mprData.tableRows.map((row) => ({
-      id: row.id || null, // If editing existing row, carry ID
-      itemCode: row.itemCode || "",
-      itemName: row.itemName || "",
-      uom: row.uom || "",
-      specification: row.specification || "",
-      requestedQty: Number(row.qty) || 0,
-      estimatedRate: Number(row.rate) || 0,
-      estimatedValue: Number(row.value) || 0,
-      stockAvailable: Number(row.stock) || 0,
-      avgMonthlyConsumption: Number(row.amc) || 0,
-      lastPurchaseInfo: row.lastPurchase || "",
-      vendorIds: row.vendorIds || [],
-      status: "pending", // Default status
-    }));
-
-    // Build final payload
-    const payload = {
-      mprId: mprData.mprId || null, // null for new, existing for edit
-      mprNo: mprData.mprNo,
-      mprDate: mprData.mprDate,
-      departmentId: mprData.departmentId,
-      projectName: mprData.projectName,
-      mprTypeId: mprData.mprTypeId,
-      tenderTypeId: mprData.tenderTypeId,
-      priority: mprData.priority,
-      requiredByDate: mprData.requiredByDate,
-      deliverySchedule: mprData.deliverySchedule,
-      durationDays: mprData.durationDays,
-      specialNotes: mprData.specialNotes,
-      justification: mprData.justification,
-      removedDetails: mprData.removedDetails || [], // track deleted detail rows
-      mprDetailRequests,
-    };
-
-    console.log("Final Payload:", payload);
-
-    // Add/update MPR in list (simulate API response)
-    if (!mprData.mprId) {
-      setMprList([...mprList, payload]);
-    } else {
-      setMprList(
-        mprList.map((m) => (m.mprId === payload.mprId ? payload : m))
-      );
-    }
-
-    // Reset form for new entry
+  const resetForm = () => {
     setMprData({
       mprNo: "",
       mprDate: "",
@@ -275,15 +222,129 @@ const fetchMprList = async () => {
           rate: "",
           value: "",
           stock: "",
-          amc: 1,
+          amc: "",
           lastPurchase: "",
           vendorIds: [],
           vendorNames: "",
-          status: "pending",
         },
       ],
       removedDetails: [],
+      mprId: null,
     });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!mprData.mprNo || !mprData.mprDate || !mprData.departmentId) {
+      alert("Please fill required fields");
+      return;
+    }
+
+    if (!mprData.tableRows.length) {
+      alert("Add at least one item");
+      return;
+    }
+
+    try {
+      let res;
+
+ 
+      if (mprData.mprId) {
+        const details = mprData.tableRows.map((row, index) => ({
+          mprDetailId: row.id || null,
+          mprId: mprData.mprId,
+          slNo: index + 1,
+
+          itemCode: row.itemCode || "",
+          itemName: row.itemName || "",
+          uom: row.uom || "",
+          specificationn: row.specification || "", 
+          requestedQty: Number(row.qty) || 0,
+          estimatedRate: Number(row.rate) || 0,
+          estimatedValue: Number(row.value) || 0,
+          stockAvailable: Number(row.stock) || 0,
+          avgMonthlyConsumption: Number(row.amc) || 0,
+          lastPurchaseInfo: row.lastPurchase || "",
+          remarks: "",
+          status: "n",
+          vendorIds: row.vendorIds || [],
+        }));
+
+        const updatePayload = {
+          mprId: mprData.mprId,
+          mprNo: mprData.mprNo,
+          mprDate: mprData.mprDate,
+          departmentId: mprData.departmentId,
+          projectName: mprData.projectName,
+          mprTypeId: mprData.mprTypeId,
+          tenderTypeId: mprData.tenderTypeId,
+          priority: mprData.priority,
+          requiredByDate: mprData.requiredByDate,
+          deliverySchedule: mprData.deliverySchedule,
+          durationDays: mprData.durationDays,
+          specialNotes: mprData.specialNotes,
+          justification: mprData.justification,
+
+          details: details,
+          deleteDetailIds: mprData.removedDetails || [],
+        };
+
+        res = await apiClient.post("/api/mpr/update", updatePayload);
+      }
+
+
+      else {
+        const mprDetailRequests = mprData.tableRows.map((row) => ({
+          id: row.id || null,
+          itemCode: row.itemCode || "",
+          itemName: row.itemName || "",
+          uom: row.uom || "",
+          specification: row.specification || "",
+          requestedQty: Number(row.qty) || 0,
+          estimatedRate: Number(row.rate) || 0,
+          estimatedValue: Number(row.value) || 0,
+          stockAvailable: Number(row.stock) || 0,
+          avgMonthlyConsumption: Number(row.amc) || 0,
+          lastPurchaseInfo: row.lastPurchase || "",
+          vendorIds: row.vendorIds || [],
+        }));
+
+        const createPayload = {
+          mprId: null,
+          mprNo: mprData.mprNo,
+          mprDate: mprData.mprDate,
+          departmentId: mprData.departmentId,
+          projectName: mprData.projectName,
+          mprTypeId: mprData.mprTypeId,
+          tenderTypeId: mprData.tenderTypeId,
+          priority: mprData.priority,
+          requiredByDate: mprData.requiredByDate,
+          deliverySchedule: mprData.deliverySchedule,
+          durationDays: mprData.durationDays,
+          specialNotes: mprData.specialNotes,
+          justification: mprData.justification,
+          removedDetails: mprData.removedDetails || [],
+          mprDetailRequests,
+        };
+
+        res = await apiClient.post("/api/mpr/registrationf", createPayload);
+      }
+
+      console.log("API Response:", res.data);
+
+
+      alert(`MPR ${mprData.mprId ? "updated" : "created"} successfully!`);
+
+
+      fetchMprList();
+
+      resetForm();
+
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Failed to submit MPR");
+    }
   };
 
   const handleEdit = (mpr) => {
@@ -313,9 +374,12 @@ const fetchMprList = async () => {
         stock: d.stockAvailable,
         amc: d.avgMonthlyConsumption,
         lastPurchase: d.lastPurchaseInfo,
-        vendorIds: d.vendorIds || [],
-        vendorNames: "", // will bind if needed
-        status: d.status || "pending",
+
+        vendorIds: d.vendors ? d.vendors.map(v => v.vendorId) : [],
+
+        vendorNames: d.vendors
+          ? d.vendors.map(v => v.vendorName).join(", ")
+          : "",
       })),
       removedDetails: [],
     });
@@ -323,7 +387,6 @@ const fetchMprList = async () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // ===== Pagination =====
   const filteredList = mprList.filter((mpr) =>
     mpr.mprNo.toLowerCase().includes(search.toLowerCase())
   );
@@ -341,7 +404,6 @@ const fetchMprList = async () => {
         </div>
 
         <form onSubmit={handleSubmit}>
-          {/* Basic Fields */}
           <div className="row mb-3">
             <div className="col-md-4">
               <label>MPR No</label>
@@ -380,7 +442,6 @@ const fetchMprList = async () => {
             </div>
           </div>
 
-          {/* Other Fields */}
           <div className="row mb-3">
             <div className="col-md-4">
               <label>Project Name</label>
@@ -489,7 +550,6 @@ const fetchMprList = async () => {
             </div>
           </div>
 
-          {/* Table */}
           <h5 className="mt-4 text-primary">Items</h5>
           <div className="table-responsive" style={{ overflowX: "auto" }}>
             <div style={{ maxHeight: "300px", overflowY: "auto" }}>
@@ -509,7 +569,6 @@ const fetchMprList = async () => {
                   <col style={{ width: "100px" }} />
                   <col style={{ width: "80px" }} />
                   <col style={{ width: "150px" }} />
-                  <col style={{ width: "100px" }} />
                   <col style={{ width: "400px" }} />
                   <col style={{ width: "80px" }} />
                 </colgroup>
@@ -526,7 +585,6 @@ const fetchMprList = async () => {
                     <th>Stock</th>
                     <th>AMC</th>
                     <th>Last Purchase</th>
-                    <th>Status</th>
                     <th>Vendor name</th>
                     <th>Action</th>
                   </tr>
@@ -535,7 +593,7 @@ const fetchMprList = async () => {
                   {mprData.tableRows.map((row, index) => (
                     <tr key={index}>
                       <td>{index + 1}</td>
-                      {["itemCode", "itemName", "uom", "specification", "qty", "rate", "value", "stock", "amc", "lastPurchase", "status"].map((key) => (
+                      {["itemCode", "itemName", "uom", "specification", "qty", "rate", "value", "stock", "amc", "lastPurchase"].map((key) => (
                         <td key={key}>
                           <input
                             className="form-control form-control-sm"
@@ -587,7 +645,7 @@ const fetchMprList = async () => {
 
           <div className="d-flex justify-content-end mt-3">
             <button type="submit" className="btn btn-primary">
-              Submit MPR
+              {mprData.mprId ? "Update MPR" : "Submit MPR"}
             </button>
           </div>
         </form>
@@ -654,7 +712,6 @@ const fetchMprList = async () => {
         </div>
       </div>
 
-      {/* Vendor Modal */}
       {vendorPopupIndex !== null && (
         <div
           style={{

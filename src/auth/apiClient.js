@@ -1,21 +1,21 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "http://103.133.215.182:8081/procurement_java",
+  // baseURL: "http://localhost:8080",
+
   // baseURL: "http://192.168.1.6:8080",
   timeout: 10000,
 });
 
-/* ───────── REQUEST INTERCEPTOR ───────── */
 apiClient.interceptors.request.use(
   (config) => {
     const auth = JSON.parse(localStorage.getItem("auth"));
 
-    // ❗ Skip token for public APIs
     const noAuthRoutes = [
       "/auth/login",
       "/vendor/register",
-      "/auth/changepassword", // optional if public
+      "/auth/changepassword", 
     ];
 
     const isNoAuthRoute = noAuthRoutes.some((url) =>
@@ -31,14 +31,12 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-/* ───────── RESPONSE INTERCEPTOR ───────── */
 apiClient.interceptors.response.use(
   (response) => {
-    // ✅ Always return only backend response body
     return response.data;
   },
   (error) => {
-    // ❌ NETWORK ERROR (server down / wrong URL)
+
     if (!error.response) {
       return Promise.reject({
         message: "Server not reachable. Please try again later.",
@@ -48,15 +46,12 @@ apiClient.interceptors.response.use(
 
     const { status, data } = error.response;
 
-    // ✅ ONLY logout on REAL auth failure
     if (status === 401) {
       const auth = JSON.parse(localStorage.getItem("auth"));
 
-      // extra safety: logout only if user was logged in
       if (auth?.token) {
         localStorage.removeItem("auth");
 
-        // ❗ avoid reload loop
         if (window.location.pathname !== "/") {
           window.location.replace("/");
         }
