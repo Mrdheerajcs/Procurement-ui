@@ -5,14 +5,24 @@ import ProfileImg from "../../assets/images/profile_av.png";
 import "./header.css";
 
 const routeLabels = {
-    "/dashboard": "Dashboard",
-    "/mpr-list": "MPR List",
-    "/creatempr": "Create MPR",
-    "/mpr-approval": "MPR Approval",
-    "/mpr-history": "MPR History",
-    "/publishtender": "Publish Tender",
-    "/searchtender": "Search Tender",
-    "/profile": "My Profile",
+  "/dashboard": "Dashboard",
+
+  // MPR
+  "/creatempr": "Create MPR",
+  "/mpr-list": "MPR List",
+  "/mpr-approval": "MPR Approval",
+  "/mpr-history": "MPR History",
+
+  // Tender
+  "/publishtender": "Publish Tender",
+  "/searchtender": "Search Tender",
+  "/tender-dashboard": "Technical Evaluation",
+  "/commercial-comparison": "Commercial Evaluation",
+  "/bid-submission": "Bid Participation",
+  "/vendor-contracts": "My Contracts",
+
+  // Profile
+  "/profile": "My Profile",
 };
 
 const Header = ({ onToggleMobileSidebar, onToggleCollapse, isSidebarCollapsed }) => {

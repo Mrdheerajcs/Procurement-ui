@@ -39,12 +39,25 @@
 .brand-icon {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.9rem;
+  justify-content: center;
+  padding: 0.7rem;
   border-radius: 0.9rem;
   color: #fff;
   background: rgba(37, 99, 235, 0.2);
   border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.sidebar-logo-full {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.sidebar-logo-mini {
+  display: none;
 }
 
 .logo-icon {
@@ -135,6 +148,14 @@
 .app-sidebar.collapsed .m-link span,
 .app-sidebar.collapsed .sub-menu {
   display: none;
+}
+
+.app-sidebar.collapsed .sidebar-logo-full {
+  display: none;
+}
+
+.app-sidebar.collapsed .sidebar-logo-mini {
+  display: inline-flex;
 }
 
 .app-sidebar.collapsed .m-link {

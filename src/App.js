@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthContext";
 import PrivateRoute from "./auth/PrivateRoute";
+import Chatbot from "./Components/ChatBot";
 
 const Layout = lazy(() => import("./Views/layout"));
 const Dashboard = lazy(() => import("./Views/Dashboard"));
@@ -15,9 +16,11 @@ const MPRApproval = lazy(() => import("./Views/MPRApproval"));
 const Profile = lazy(() => import("./Views/Profile"));
 const MPRHistory = lazy(() => import("./Views/MPRHistory"));
 const ProcurementLanding = lazy(() => import("./Components/ProcurementLanding"));
+const TenderDashboard = lazy(() => import("./Views/TenderDashboard"));
 const CommercialComparison = lazy(() => import("./Views/CommercialComparison"));
 const BidSubmissionForm = lazy(() => import("./Views/BidSubmissionForm"));
-const TenderDashboard = lazy(() => import("./Views/TenderDashboard"));
+const VendorContracts = lazy(() => import("./Views/VendorContracts"));
+
 
 const Loader = () => (
   <div style={{ textAlign: "center", marginTop: "50px" }}>
@@ -32,8 +35,8 @@ function App() {
         <Suspense fallback={<Loader />}>
           <Routes>
 
-            <Route path="/login-registration" element={<Login />} />
-            <Route path='/' element={<ProcurementLanding/>}/>
+            <Route path="/" element={<Login />} />
+            <Route path="/tenders" element={<ProcurementLanding />} />
 
             <Route element={<PrivateRoute />}>
 
@@ -51,15 +54,17 @@ function App() {
                <Route path='/mpr-approval' element={<MPRApproval/>}/>
                <Route path='/profile' element={<Profile/>}/>
                 <Route path='/mpr-history' element={<MPRHistory/>}/>
+                <Route path='/tender-dashboard' element={<TenderDashboard/>}/>
                 <Route path='/commercial-comparison' element={<CommercialComparison/>}/>
                 <Route path='/bid-submission' element={<BidSubmissionForm/>}/>
-                <Route path='/tender-dashboard' element={<TenderDashboard/>}/>
-                
+                <Route path='/vendor-contracts' element={<VendorContracts/>}/>
               </Route>
 
             </Route>
 
           </Routes>
+          <Chatbot />
+
         </Suspense>
       </BrowserRouter>
     </AuthProvider>

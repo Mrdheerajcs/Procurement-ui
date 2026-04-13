@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./sidebar.css";
 import { Link, useLocation } from "react-router-dom";
+import eProcLogo from "../../assets/images/e-proc-logo.png";
 
 const menuConfig = [
   {
@@ -14,8 +15,8 @@ const menuConfig = [
     title: "MPR Management",
     icon: "bi-clipboard2-check",
     items: [
-      { label: "MPR List", to: "/mpr-list" },
       { label: "Create MPR", to: "/creatempr" },
+      { label: "MPR List", to: "/mpr-list" },
       { label: "MPR Approval", to: "/mpr-approval" },
       { label: "MPR History", to: "/mpr-history" },
     ],
@@ -27,6 +28,10 @@ const menuConfig = [
     items: [
       { label: "Publish Tender", to: "/publishtender" },
       { label: "Search Tender", to: "/searchtender" },
+      { label: "Technical Evaluation", to: "/tender-dashboard" },
+      { label: "Commercial Evaluation", to: "/commercial-comparison" },
+      { label: "Bid Participation", to: "/bid-submission" }, 
+      { label: "My Contracts", to: "/vendor-contracts" },
     ],
   },
   {
@@ -62,10 +67,10 @@ const Sidebar = ({ collapsed, mobileOpen, onCloseMobile }) => {
     >
       <div className="app-sidebar-inner">
         <Link to="/dashboard" className="brand-icon" onClick={onCloseMobile}>
-          <span className="logo-icon">
+          <img src={eProcLogo} alt="E-Procurement" className="sidebar-logo-full" />
+          {/* <span className="logo-icon sidebar-logo-mini">
             <i className="bi bi-grid-1x2-fill" />
-          </span>
-          <span className="logo-text">E-Procurement</span>
+          </span> */}
         </Link>
 
         <ul className="menu-list">
