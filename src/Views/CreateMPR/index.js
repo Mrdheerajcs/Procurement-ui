@@ -328,7 +328,7 @@ const CreateMPR = () => {
           mprDetailRequests,
         };
 
-        res = await apiClient.post("/api/mpr/registrationf", createPayload);
+        res = await apiClient.post("/api/mpr/registration", createPayload);
       }
 
       console.log("API Response:", res.data);

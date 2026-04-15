@@ -27,10 +27,25 @@ const menuConfig = [
     icon: "bi-megaphone",
     items: [
       { label: "Publish Tender", to: "/publishtender" },
+      { label: "Tender Approval", to: "/tender-approval" },
       { label: "Search Tender", to: "/searchtender" },
-      { label: "Technical Evaluation", to: "/tender-dashboard" },
-      { label: "Commercial Evaluation", to: "/commercial-comparison" },
-      { label: "Bid Participation", to: "/bid-submission" }, 
+    ],
+  },
+  {
+    key: "evaluation",
+    title: "Evaluation",
+    icon: "bi-clipboard-data",
+    items: [
+      { label: "Technical Evaluation", to: "/technical-evaluation" },
+      { label: "Commercial Evaluation", to: "/commercial-evaluation" },
+    ],
+  },
+  {
+    key: "vendor",
+    title: "Vendor Portal",
+    icon: "bi-building",
+    items: [
+      { label: "Bid Participation", to: "/bid-submission" },
       { label: "My Contracts", to: "/vendor-contracts" },
     ],
   },
@@ -39,6 +54,12 @@ const menuConfig = [
     title: "Profile",
     icon: "bi-person-circle",
     items: [{ label: "My Profile", to: "/profile" }],
+  },
+  {
+    key: "audit",
+    title: "Admin",
+    icon: "bi-shield-lock",
+    items: [{ label: "Audit Logs", to: "/audit-logs" }],
   },
 ];
 
@@ -50,7 +71,6 @@ const Sidebar = ({ collapsed, mobileOpen, onCloseMobile }) => {
     const activeGroup = menuConfig.find((section) =>
       section.items.some((item) => location.pathname.startsWith(item.to))
     );
-
     setOpenMenu(activeGroup?.key || "");
   }, [location.pathname]);
 
@@ -68,9 +88,6 @@ const Sidebar = ({ collapsed, mobileOpen, onCloseMobile }) => {
       <div className="app-sidebar-inner">
         <Link to="/dashboard" className="brand-icon" onClick={onCloseMobile}>
           <img src={eProcLogo} alt="E-Procurement" className="sidebar-logo-full" />
-          {/* <span className="logo-icon sidebar-logo-mini">
-            <i className="bi bi-grid-1x2-fill" />
-          </span> */}
         </Link>
 
         <ul className="menu-list">

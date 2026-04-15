@@ -134,10 +134,15 @@ const Login = () => {
   const [states, setStates] = useState([]);
   const [vendorTypes, setVendorTypes] = useState([]);
   const [loginData, setLoginData] = useState({ username: "", password: "" });
-const [successMsg, setSuccessMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [feeEnabled, setFeeEnabled] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentStep, setPaymentStep] = useState("idle");
+  // idle | review | processing | success | failed
+  const [paymentError, setPaymentError] = useState("");
+  const [paymentId, setPaymentId] = useState("");
 
   const [fd, setFd] = useState({
-    vendorCode: "",
     vendorName: "",
     contactPerson: "",
     mobileNo: "",
@@ -186,6 +191,60 @@ const [successMsg, setSuccessMsg] = useState("");
       setLoginError(err.message || "Something went wrong");
     }
   };
+
+  useEffect(() => {
+    apiClient.get("/api/config/fee")
+      .then(res => {
+        setFeeEnabled(res.enabled);   // ✅ FIX
+      })
+      .catch(err => {
+        console.error("Fee config error:", err);
+      });
+  }, []);
+
+const handlePaymentAndRegister = async () => {
+  setPaymentStep("processing");
+  setPaymentError("");
+  setLoading(true);
+
+  try {
+    // 1. Create Payment
+    const paymentRes = await apiClient.post("/api/payment/create", {
+      email: fd.emailId,
+    });
+
+    const pid = paymentRes.paymentId || paymentRes.data?.paymentId;
+
+    if (!pid) throw new Error("Payment creation failed");
+
+    setPaymentId(pid);
+
+    // 2. Fake delay for UI
+    await new Promise((r) => setTimeout(r, 2000));
+
+    // 3. Mark success on backend
+    await apiClient.post("/api/payment/success", {
+      paymentId: pid,
+    });
+
+    setPaymentStep("success");
+
+    // 4. Submit registration
+    await submitForm();
+
+    // 5. Auto close after success
+    setTimeout(() => {
+      setPaymentStep("idle");
+    }, 2000);
+
+  } catch (err) {
+    setPaymentError(err.message || "Payment failed");
+    setPaymentStep("failed");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const fetchStates = async (countryId) => {
     try {
@@ -360,36 +419,36 @@ const [successMsg, setSuccessMsg] = useState("");
     }
   };
   /* ── REGISTER API ── */
-const submitForm = async () => {
-  setRegError("");
-  setSuccessMsg("");
-  setLoading(true);
+  const submitForm = async () => {
+    setRegError("");
+    setSuccessMsg("");
+    setLoading(true);
 
-  const payload = {
-    ...fd,
-    isPreferred: fd.isPreferred ? "Y" : "N",
-    isBlacklisted: fd.isBlacklisted ? "Y" : "N",
-  };
+    const payload = {
+      ...fd,
+      isPreferred: fd.isPreferred ? "Y" : "N",
+      isBlacklisted: fd.isBlacklisted ? "Y" : "N",
+    };
 
-  try {
-    const res = await apiClient.post("/api/vendors/registration", payload);
+    try {
+      const res = await apiClient.post("/api/vendors/registration", payload);
 
-    if (res.status === "SUCCESS") {
-      setSuccessMsg(res.message || "Vendor registered successfully"); 
-      setSubmitted(true);
+      if (res.status === "SUCCESS") {
+        setSuccessMsg(res.message || "Vendor registered successfully");
+        setSubmitted(true);
 
-      setTimeout(() => {
-        flip();
-      }, 3000);
-    } else {
-      setRegError(res.message || "Registration failed.");
+        setTimeout(() => {
+          flip();
+        }, 3000);
+      } else {
+        setRegError(res.message || "Registration failed.");
+      }
+    } catch {
+      setRegError("Server error. Please try again.");
+    } finally {
+      setLoading(false);
     }
-  } catch {
-    setRegError("Server error. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   /* ── STEP BODY ── */
   const stepBody = () => {
@@ -397,10 +456,10 @@ const submitForm = async () => {
       case 1:
         return (
           <>
-            <TwoCol>
-              <Field label="vendor Code" name="vendorCode" value={fd.vendorCode} onChange={handleChange} required />
-              <Field label="vendor Name" name="vendorName" value={fd.vendorName} onChange={handleChange} required />
-            </TwoCol>
+            {/* <TwoCol> */}
+            {/* <Field label="vendor Code" name="vendorCode" value={fd.vendorCode} onChange={handleChange} required /> */}
+            <Field label="vendor Name" name="vendorName" value={fd.vendorName} onChange={handleChange} required />
+            {/* </TwoCol> */}
 
             <TwoCol>
               <Field
@@ -693,7 +752,7 @@ const submitForm = async () => {
                 <div className="lr-step-hd">{stepNames[step - 1]} Details</div>
                 <div className="lr-step-body">{stepBody()}</div>
 
-                {regError   && <p className="lr-err">{regError}</p>}
+                {regError && <p className="lr-err">{regError}</p>}
                 {successMsg && <p className="lr-success">{successMsg}</p>}
 
                 <div className="lr-btn-row">
@@ -702,8 +761,19 @@ const submitForm = async () => {
                   {step === totalSteps && (
                     <div className="lr-corner-btns">
                       <button className="lr-btn-cancel" onClick={flip}>Cancel</button>
-                      <button className="lr-btn-submit" onClick={submitForm} disabled={loading}>
-                        {loading ? "Submitting…" : "Submit"}
+                      <button
+                        className="lr-btn-submit"
+                        onClick={() => {
+                          if (feeEnabled) {
+                             setPaymentStep("review");
+setShowPayment(true);
+                          } else {
+                            submitForm();
+                          }
+                        }}
+                        disabled={loading}
+                      >
+                        {loading ? "Processing..." : feeEnabled ? "Pay & Register" : "Register"}
                       </button>
                     </div>
                   )}
@@ -723,10 +793,10 @@ const submitForm = async () => {
       <section className="lp-strip">
         <div className="lp-strip-inner">
           {[
-            { icon: "bi-file-earmark-text-fill", title: "Tender Management",  desc: "Publish and track tenders across all departments"  },
-            { icon: "bi-clipboard2-check-fill",  title: "MPR Workflow",        desc: "Streamlined material purchase request approvals"  },
-            { icon: "bi-people-fill",            title: "Vendor Portal",       desc: "Onboard and manage approved vendor relationships" },
-            { icon: "bi-graph-up-arrow",         title: "Live Analytics",      desc: "Real-time procurement dashboards and reporting"  },
+            { icon: "bi-file-earmark-text-fill", title: "Tender Management", desc: "Publish and track tenders across all departments" },
+            { icon: "bi-clipboard2-check-fill", title: "MPR Workflow", desc: "Streamlined material purchase request approvals" },
+            { icon: "bi-people-fill", title: "Vendor Portal", desc: "Onboard and manage approved vendor relationships" },
+            { icon: "bi-graph-up-arrow", title: "Live Analytics", desc: "Real-time procurement dashboards and reporting" },
           ].map((f, i) => (
             <div key={i} className="lp-strip-card">
               <div className="lp-strip-icon"><i className={`bi ${f.icon}`} /></div>
@@ -749,6 +819,84 @@ const submitForm = async () => {
         </div>
       </footer>
 
+
+{feeEnabled && paymentStep !== "idle" && (
+  <div className="payment-overlay">
+    <div className="payment-card">
+
+      {/* REVIEW STEP */}
+      {paymentStep === "review" && (
+        <>
+          <h3>Confirm Payment</h3>
+          <p>Registration Fee: <b>₹5000</b></p>
+
+          <button
+            className="pay-btn"
+            onClick={handlePaymentAndRegister}
+          >
+            Proceed to Pay
+          </button>
+
+          <button
+            className="cancel-btn"
+            onClick={() => setPaymentStep("idle")}
+          >
+            Cancel
+          </button>
+        </>
+      )}
+
+      {/* PROCESSING */}
+      {paymentStep === "processing" && (
+        <>
+          <div className="spinner"></div>
+          <h3>Processing Payment...</h3>
+          <p>Please do not refresh the page</p>
+        </>
+      )}
+
+      {/* SUCCESS */}
+      {paymentStep === "success" && (
+        <>
+          <div className="success-icon">✔</div>
+          <h3>Payment Successful</h3>
+          <p>Completing registration...</p>
+
+          <button
+            className="close-btn"
+            onClick={() => setPaymentStep("idle")}
+          >
+            Close
+          </button>
+        </>
+      )}
+
+      {/* FAILED */}
+      {paymentStep === "failed" && (
+        <>
+          <div className="error-icon">✖</div>
+          <h3>Payment Failed</h3>
+          <p>{paymentError}</p>
+
+          <button
+            className="pay-btn"
+            onClick={() => setPaymentStep("review")}
+          >
+            Try Again
+          </button>
+
+          <button
+            className="cancel-btn"
+            onClick={() => setPaymentStep("idle")}
+          >
+            Close
+          </button>
+        </>
+      )}
+
+    </div>
+  </div>
+)}
     </div>
   );
 };

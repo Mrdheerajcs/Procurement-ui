@@ -1,11 +1,11 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: "http://103.133.215.182:8081/procurement_java",
-  // baseURL: "http://localhost:8080",
+  // baseURL: "http://103.133.215.182:8081/procurement_java",
+  baseURL: "http://localhost:8080",
 
   // baseURL: "http://192.168.1.6:8080",
-  timeout: 10000,
+  timeout: 20000,
 });
 
 apiClient.interceptors.request.use(
