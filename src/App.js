@@ -37,6 +37,7 @@ const VendorContracts = lazy(() => import("./Views/VendorContracts"));
 // Profile & Admin
 const Profile = lazy(() => import("./Views/Profile"));
 const AuditLogs = lazy(() => import("./Views/pages/AuditLogs"));
+const MPRApprovalLevels = lazy(() => import("./Views/pages/MPRApprovalLevels"));
 
 
 
@@ -70,6 +71,7 @@ function App() {
                 <Route path="/creatempr" element={<CreateMPR />} />
                 <Route path="/mpr-approval" element={<MPRApproval />} />
                 <Route path="/mpr-history" element={<MPRHistory />} />
+                <Route path="/mpr-approval-levels" element={<MPRApprovalLevels />} />
 
                 {/* Tender Management */}
                 <Route path="/publishtender" element={<PublishTender />} />

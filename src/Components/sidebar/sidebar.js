@@ -61,6 +61,14 @@ const menuConfig = [
     icon: "bi-shield-lock",
     items: [{ label: "Audit Logs", to: "/audit-logs" }],
   },
+  {
+  key: "mpr-approval-levels",
+  title: "MPR Approval Levels",
+  icon: "bi-diagram-3",
+  items: [
+    { label: "Pending Approvals", to: "/mpr-approval-levels" },
+  ],
+},
 ];
 
 const Sidebar = ({ collapsed, mobileOpen, onCloseMobile }) => {

@@ -43,6 +43,9 @@ const CreateMPR = () => {
   const [departments, setDepartments] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [loginError, setLoginError] = useState("");
+  const [showSubmitApproval, setShowSubmitApproval] = useState(false);
+  const [createdMprId, setCreatedMprId] = useState(null);
+
 
   const itemsPerPage = 5;
 
@@ -249,7 +252,7 @@ const CreateMPR = () => {
     try {
       let res;
 
- 
+
       if (mprData.mprId) {
         const details = mprData.tableRows.map((row, index) => ({
           mprDetailId: row.id || null,
@@ -259,7 +262,7 @@ const CreateMPR = () => {
           itemCode: row.itemCode || "",
           itemName: row.itemName || "",
           uom: row.uom || "",
-          specificationn: row.specification || "", 
+          specificationn: row.specification || "",
           requestedQty: Number(row.qty) || 0,
           estimatedRate: Number(row.rate) || 0,
           estimatedValue: Number(row.value) || 0,
@@ -329,6 +332,12 @@ const CreateMPR = () => {
         };
 
         res = await apiClient.post("/api/mpr/registration", createPayload);
+
+        if (res.status === "SUCCESS") {
+          setCreatedMprId(res.data.mprId);
+          setShowSubmitApproval(true);
+          alert("MPR created! Click 'Submit for Approval' to start workflow.");
+        }
       }
 
       console.log("API Response:", res.data);
@@ -346,6 +355,20 @@ const CreateMPR = () => {
       alert("Failed to submit MPR");
     }
   };
+
+  const handleSubmitForApproval = async () => {
+    try {
+        const res = await apiClient.post(`/api/mpr/approval-level/submit/${createdMprId}`);
+        if (res.status === "SUCCESS") {
+            alert(res.message);
+            setShowSubmitApproval(false);
+            resetForm();
+            fetchMprList();
+        }
+    } catch (err) {
+        alert(err.message || "Failed to submit for approval");
+    }
+};
 
   const handleEdit = (mpr) => {
     setMprData({
@@ -585,6 +608,15 @@ const CreateMPR = () => {
               </button>
             </div>
           </form>
+
+          {showSubmitApproval && (
+    <div className="alert alert-info mt-3">
+        <p>MPR created successfully!</p>
+        <button className="btn btn-primary" onClick={handleSubmitForApproval}>
+            <i className="bi bi-send me-2" />Submit for Approval
+        </button>
+    </div>
+)}
         </div>
       </div>
 
