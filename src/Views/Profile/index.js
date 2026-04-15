@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 
 const ProfilePage = () => {
+  const [step, setStep] = useState(1);
+
   const [user, setUser] = useState({
     fullName: "",
     dob: "",
@@ -11,13 +13,23 @@ const ProfilePage = () => {
     email: "",
     currentPassword: "",
     newPassword: "",
+
+    gstNo: "",
+    panNo: "",
+    registrationNo: "",
+    licenseValidTill: "",
+
+    accountHolder: "",
+    accountNumber: "",
+    ifsc: "",
+    bankName: "",
+
     profilePic: null,
   });
 
   const [preview, setPreview] = useState(null);
-const [showCurrent, setShowCurrent] = useState(false);
-const [showNew, setShowNew] = useState(false);
-const [showConfirm, setShowConfirm] = useState(false);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
 
   const handleChange = (e) => {
     setUser({ ...user, [e.target.name]: e.target.value });
@@ -26,172 +38,300 @@ const [showConfirm, setShowConfirm] = useState(false);
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setUser({ ...user, profilePic: file });
       setPreview(URL.createObjectURL(file));
     }
   };
 
-  const handleRemoveImage = () => {
-  setUser({ ...user, profilePic: null });
-  setPreview(null);
-};
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
- const handleSubmit = (e) => {
-  e.preventDefault();
-
-  if (
-    !user.fullName ||
-    !user.dob ||
-    !user.city ||
-    !user.state ||
-    !user.mobile ||
-    !user.email ||
-    !user.currentPassword ||
-    !user.newPassword
+    if (
+     !user.accountHolder ||
+      !user.accountNumber ||
+     !user.ifsc ||
+     !user.bankName
   ) {
-    alert("Please fill all fields");
-    return;
-  }
-  alert("Profile Updated Successfully");
-};
+      alert("Please fill all bank details");
+      return;
+    }
 
+    alert("Profile Updated Successfully ✅");
+  };
   return (
-    <div className="container-fluid">
-      <div className="row justify-content-center">
-        <div className="col-lg-9">
-          <div className="mb-4">
-            <h1 className="page-title">My Profile</h1>
-            <p className="text-muted-soft">Manage your account details and password</p>
-          </div>
+    <div className="main-bg">
+      <div className="container py-5">
+        <div className="row justify-content-center">
+          <div className="col-lg-10">
 
-          <div className="row g-4">
-            {/* Avatar Card */}
-            <div className="col-md-4">
-              <div className="card text-center p-4 h-100">
-                <div className="mx-auto mb-3" style={{ position: "relative", display: "inline-block" }}>
-                  <img
-                    src={preview || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-                    alt="profile"
-                    className="rounded-circle"
-                    style={{ width: "100px", height: "100px", objectFit: "cover", border: "3px solid var(--app-primary)" }}
-                  />
-                  <label style={{
-                    position: "absolute", bottom: 0, right: 0,
-                    background: "var(--app-primary)", color: "#fff",
-                    borderRadius: "50%", width: "28px", height: "28px",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    cursor: "pointer", boxShadow: "0 2px 6px rgba(37,99,235,0.35)", fontSize: "12px"
-                  }}>
-                    <i className="bi bi-pencil-fill" />
-                    <input type="file" hidden accept="image/*" onChange={handleImageChange} />
-                  </label>
+            <h2 className="fw-bold mb-1 title">My Profile</h2>
+            <p className="text-muted mb-3">
+              Manage your account details
+            </p>
+
+            <div className="row g-4">
+
+              {/* LEFT CARD */}
+              <div className="col-md-4">
+                <div className="glass-card text-center p-4 h-100 left-card">
+
+                  <div className="profile-img-wrapper">
+                    <img
+                      src={
+                        preview ||
+                        "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                      }
+                      className="profile-img"
+                      alt=""
+                    />
+
+                    <label className="edit-btn">
+                      <i className="bi bi-pencil-fill"></i>
+                      <input type="file" hidden onChange={handleImageChange}/>
+                    </label>
+                  </div>
+
+                  <h5 className="mt-3">
+                    {user.fullName || "Your Name"}
+                  </h5>
+
+                  <p className="text-muted small">
+                    {user.email || "your@email.com"}
+                  </p>
+
+                  {/* MENU */}
+                  <div className="mt-4 w-100">
+                    <div className={`nav-link-custom ${step === 1 ? "active" : ""}`} onClick={() => setStep(1)}>
+                      Basic Info
+                    </div>
+                    <div className={`nav-link-custom ${step === 2 ? "active" : ""}`} onClick={() => setStep(2)}>
+                      Legal Details
+                    </div>
+                    <div className={`nav-link-custom ${step === 3 ? "active" : ""}`} onClick={() => setStep(3)}>
+                      Bank Details
+                    </div>
+                  </div>
+
                 </div>
-                <h6 className="fw-semibold mb-1">{user.fullName || "Your Name"}</h6>
-                <p className="text-muted-soft small mb-0">{user.email || "your@email.com"}</p>
-                {preview && (
-                  <button className="btn btn-sm btn-outline-danger mt-3" onClick={handleRemoveImage}>
-                    <i className="bi bi-trash me-1" />Remove Photo
-                  </button>
-                )}
               </div>
-            </div>
 
-            {/* Form Card */}
-            <div className="col-md-8">
-              <div className="card p-4">
-                <h6 className="section-title mb-4">Personal Information</h6>
-                <form onSubmit={handleSubmit}>
-                  <div className="row g-3">
-                    <div className="col-12">
-                      <div className="form-floating">
-                        <input type="text" className="form-control" id="fullName" placeholder="Full Name" name="fullName" value={user.fullName} onChange={handleChange} />
-                        <label htmlFor="fullName">Full Name</label>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-floating">
-                        <input type="date" className="form-control" id="dob" placeholder="Date of Birth" name="dob" value={user.dob} onChange={handleChange} />
-                        <label htmlFor="dob">Date of Birth</label>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-floating">
-                        <input type="tel" className="form-control" id="mobile" placeholder="Mobile Number" name="mobile" value={user.mobile} onChange={handleChange} />
-                        <label htmlFor="mobile">Mobile Number</label>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-floating">
-                        <input type="text" className="form-control" id="city" placeholder="City" name="city" value={user.city} onChange={handleChange} />
-                        <label htmlFor="city">City</label>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-floating">
-                        <input type="text" className="form-control" id="state" placeholder="State" name="state" value={user.state} onChange={handleChange} />
-                        <label htmlFor="state">State</label>
-                      </div>
-                    </div>
-                    <div className="col-12">
-                      <div className="form-floating">
-                        <input type="email" className="form-control" id="email" placeholder="Email Address" name="email" value={user.email} onChange={handleChange} />
-                        <label htmlFor="email">Email Address</label>
-                      </div>
-                    </div>
-                  </div>
+              {/* RIGHT FORM */}
+              <div className="col-md-8">
+                <div className="glass-card p-4 form-card">
 
-                  <hr className="my-4" />
-                  <h6 className="section-title mb-3">Change Password</h6>
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <div className="form-floating position-relative">
-                        <input
-                          type={showCurrent ? "text" : "password"}
-                          className="form-control"
-                          id="currentPassword"
-                          placeholder="Current Password"
-                          name="currentPassword"
-                          value={user.currentPassword}
-                          onChange={handleChange}
-                          style={{ paddingRight: "3rem" }}
-                        />
-                        <label htmlFor="currentPassword">Current Password</label>
-                        <button type="button" className="btn btn-link position-absolute end-0 top-50 translate-middle-y pe-3 text-muted" style={{ zIndex: 5 }} onClick={() => setShowCurrent(!showCurrent)}>
-                          <i className={`bi bi-eye${showCurrent ? "-slash" : ""}`} />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-floating position-relative">
-                        <input
-                          type={showNew ? "text" : "password"}
-                          className="form-control"
-                          id="newPassword"
-                          placeholder="New Password"
-                          name="newPassword"
-                          value={user.newPassword}
-                          onChange={handleChange}
-                          style={{ paddingRight: "3rem" }}
-                        />
-                        <label htmlFor="newPassword">New Password</label>
-                        <button type="button" className="btn btn-link position-absolute end-0 top-50 translate-middle-y pe-3 text-muted" style={{ zIndex: 5 }} onClick={() => setShowNew(!showNew)}>
-                          <i className={`bi bi-eye${showNew ? "-slash" : ""}`} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  {/* BASIC */}
+                  {step === 1 && (
+                    <>
+                      <h5 className="mb-3">Personal Info</h5>
 
-                  <div className="d-flex justify-content-end mt-4">
-                    <button type="submit" className="btn btn-primary px-4">
-                      <i className="bi bi-check2 me-2" />Save Changes
-                    </button>
-                  </div>
-                </form>
+                      <div className="row g-3">
+                        {[
+                          { name: "vendorcode", placeholder: "Vendor Code" },
+                          { name: "fullName", placeholder: "Full Name" },
+                          { name: "dob", type: "date" },
+                          { name: "mobile", placeholder: "Mobile" },
+                          { name: "city", placeholder: "City" },
+                          { name: "state", placeholder: "State" },
+                           { name: "pincode", placeholder: "PinCode" },
+                          
+                          { name: "email", placeholder: "Email" },
+                        ].map((f, i) => (
+                         <div className="col-md-6">
+                            <input
+                              type={f.type || "text"}
+                              name={f.name}
+                              placeholder={f.placeholder}
+                              value={user[f.name]}
+                              onChange={handleChange}
+                              className="glass-input"
+                            />
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* PASSWORD */}
+                      <h5 className="mt-4 mb-3">Change Password</h5>
+
+                      <div className="row g-3">
+                        <div className="col-md-6 position-relative">
+                          <input
+                            type={showCurrent ? "text" : "password"}
+                            name="currentPassword"
+                            placeholder="Current Password"
+                            value={user.currentPassword}
+                            onChange={handleChange}
+                            className="glass-input pe-5"
+                          />
+                          <i className="bi bi-eye toggle-eye" onClick={() => setShowCurrent(!showCurrent)} />
+                        </div>
+
+                        <div className="col-md-6 position-relative">
+                          <input
+                            type={showNew ? "text" : "password"}
+                            name="newPassword"
+                            placeholder="New Password"
+                            value={user.newPassword}
+                            onChange={handleChange}
+                            className="glass-input pe-5"
+                          />
+                          <i className="bi bi-eye toggle-eye" onClick={() => setShowNew(!showNew)} />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* LEGAL (same layout) */}
+                  {step === 2 && (
+                    <>
+                      <h5 className="mb-3">Legal Details</h5>
+
+                      <div className="row g-3">
+                        <div className="col-md-6">
+                          <input name="gstNo" placeholder="GST Number" className="glass-input" onChange={handleChange}/>
+                        </div>
+                        <div className="col-md-6">
+                          <input name="panNo" placeholder="PAN Number" className="glass-input" onChange={handleChange}/>
+                        </div>
+                        <div className="col-md-6">
+                          <input name="registrationNo" placeholder="Registration Number" className="glass-input" onChange={handleChange}/>
+                        </div>
+                        <div className="col-md-6">
+                          <input type="date" name="licenseValidTill" className="glass-input" onChange={handleChange}/>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* BANK */}
+                  {step === 3 && (
+                    <>
+                      <h5 className="mb-3">Bank Details</h5>
+
+                      <div className="row g-3">
+                        <div className="col-12">
+                          <input name="accountHolder" placeholder="Account Holder Name" className="glass-input" onChange={handleChange}/>
+                        </div>
+                        <div className="col-md-6">
+                          <input name="accountNumber" placeholder="Account Number" className="glass-input" onChange={handleChange}/>
+                        </div>
+                        <div className="col-md-6">
+                          <input name="ifsc" placeholder="IFSC Code" className="glass-input" onChange={handleChange}/>
+                        </div>
+                        <div className="col-12">
+                          <input name="bankName" placeholder="Bank Name" className="glass-input" onChange={handleChange}/>
+                        </div>
+                      </div>
+
+                      {/* ✅ SAVE BUTTON */}
+                      <div className="text-end mt-4">
+                       <button className="btn btn-primary" onClick={handleSubmit}>
+  Save Changes
+</button>
+                      </div>
+                    </>
+                  )}
+
+                </div>
               </div>
+
             </div>
           </div>
         </div>
       </div>
+
+      <style>{`
+       .glass-card {
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(12px);
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  transition: 0.3s ease;
+}
+
+/* 🔥 SAME HOVER EFFECT */
+.glass-card:hover {
+  transform: translateY(-6px) scale(1.01);
+}
+
+.glass-input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: rgba(255,255,255,0.6);
+  transition: 0.3s ease;
+}
+
+/* 🔥 CLEAN FOCUS EFFECT */
+.glass-input:focus {
+  outline: none;
+  border-color: #0a1f44;
+  box-shadow: 0 0 10px rgba(10,31,68,0.2);
+}
+
+        .form-card {
+          min-height: 520px;
+        }
+
+        .left-card {
+          min-height: 520px;
+        }
+
+        
+        .profile-img-wrapper {
+          position: relative;
+          width: fit-content;
+          margin: auto;
+        }
+
+        .profile-img {
+          width: 110px;
+          height: 110px;
+          border-radius: 50%;
+          border: 3px solid #ddd;
+        }
+
+        .edit-btn {
+          position: absolute;
+          bottom: 5px;
+          right: 5px;
+          background: #0a1f44;
+          color: white;
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+        }
+
+        /* SIMPLE HOVER */
+        .nav-link-custom {
+          padding: 10px;
+          border-radius: 8px;
+          margin-bottom: 8px;
+          cursor: pointer;
+          transition: 0.3s;
+        }
+
+        .nav-link-custom:hover {
+          background: #0a1f44;
+          color: white;
+        }
+
+        .nav-link-custom.active {
+          background: #0a1f44;
+          color: white;
+        }
+
+        .toggle-eye {
+          position: absolute;
+          right: 15px;
+          top: 50%;
+          transform: translateY(-50%);
+          cursor: pointer;
+        }
+      `}</style>
     </div>
   );
 };
