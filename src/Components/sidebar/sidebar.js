@@ -64,12 +64,11 @@ const adminMenuConfig = [
     key: "newpage",
     title: "New page",
     icon: "bi-shield-lock",
-    items: [{ label: "TenderFeePayment", to: "/tenderfeepayment" }],
-    items: [{ label: "WorkOrderView", to: "/workorderview" }],
-    items: [{ label: "PaymentGateway", to: "/paymentgateway" }],
-    items: [{ label: "RateVendor", to: "/ratevendor" }],
-    items: [{ label: "ContractDetails", to: "/contractdetails" }],
-
+    items: [{ label: "TenderFeePayment", to: "/tenderfeepayment" },
+    { label: "WorkOrderView", to: "/workorderview" },
+    { label: "PaymentGateway", to: "/paymentgateway" },
+    { label: "RateVendor", to: "/ratevendor" },
+    { label: "ContractDetails", to: "/contractdetails" },],
   },
 ];
 
@@ -103,25 +102,35 @@ const vendorMenuConfig = [
     icon: "bi-person-circle",
     items: [{ label: "My Profile", to: "/profile" }],
   },
+  {
+    key: "newpage",
+    title: "New page",
+    icon: "bi-shield-lock",
+    items: [{ label: "TenderFeePayment", to: "/tenderfeepayment" },
+    { label: "WorkOrderView", to: "/workorderview" },
+    { label: "PaymentGateway", to: "/paymentgateway" },
+    { label: "RateVendor", to: "/ratevendor" },
+    { label: "ContractDetails", to: "/contractdetails" },],
+  },
 ];
 
 const Sidebar = ({ collapsed, mobileOpen, onCloseMobile }) => {
   const { auth } = useAuth();
   const location = useLocation();
   const [openMenu, setOpenMenu] = useState("");
-  
+
   // Get user roles from auth
   const userRoles = auth?.roles || [];
-  
+
   // Debug log
   console.log("📱 Sidebar - User Roles:", userRoles);
-  
+
   // Check role (handle both spellings)
   const isAdmin = userRoles.some(role => role === "ROLE_ADMIN");
   const isVendor = userRoles.some(role => role === "ROLE_VENDOR" || role === "ROLE_VENDER");
-  
+
   console.log("📱 Sidebar - isAdmin:", isAdmin, "isVendor:", isVendor);
-  
+
   // Select menu based on role
   let menuConfig = [];
   if (isAdmin) {
