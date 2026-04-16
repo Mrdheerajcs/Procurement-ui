@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "./useAuth";
 
-// Define route access rules
+// Define route access rules 
 const routeAccessRules = {
   // Admin only routes
   "/creatempr": ["ROLE_ADMIN"],
@@ -25,6 +25,15 @@ const routeAccessRules = {
   "/searchtender": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
   "/profile": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
   "/mpr-history": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
+
+  // new routs
+  "/tenderfeepayment": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
+  "/workorderview": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
+  "/paymentgateway": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
+  "/ratevendor": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
+  "/contractdetails": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
+
+
 };
 
 const PrivateRoute = () => {

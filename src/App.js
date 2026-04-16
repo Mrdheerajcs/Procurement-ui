@@ -26,7 +26,11 @@ const MPRHistory = lazy(() => import("./Views/MPRHistory"));
 const PublishTender = lazy(() => import("./Views/pages/PublishTender"));
 const SearchTender = lazy(() => import("./Views/pages/SearchTender"));
 const TenderApproval = lazy(() => import("./Views/pages/TenderApproval"));
-
+const TenderFeePayment = lazy(() =>import("./Views/pages/TenderFeePayment"));
+const WorkOrderView = lazy(() =>import("./Views/pages/WorkOrderView"));
+const PaymentGateway = lazy(() =>import("./Views/pages/PaymentGateway"));
+const RateVendor = lazy(() =>import("./Views/pages/RateVendor"));
+ 
 // Evaluation Modules (NEW)
 const TechnicalEvaluation = lazy(() => import("./Views/pages/TechnicalEvaluation"));
 const CommercialEvaluation = lazy(() => import("./Views/pages/CommercialEvaluation"));
@@ -36,6 +40,7 @@ const BidSubmission = lazy(() => import("./Views/pages/BidSubmission"));
 const VendorContracts = lazy(() => import("./Views/VendorContracts"));
 const ClarificationResponse = lazy(() => import("./Views/pages/ClarificationResponse"));
 const PendingClarifications = lazy(() => import("./Views/pages/PendingClarifications"));
+const ContractDetails = lazy(()=> import("./Views/pages/ContractDetails"));
 
 // Profile & Admin
 const Profile = lazy(() => import("./Views/Profile"));
@@ -80,6 +85,10 @@ function App() {
                 <Route path="/publishtender" element={<PublishTender />} />
                 <Route path="/tender-approval" element={<TenderApproval />} />
                 <Route path="/searchtender" element={<SearchTender />} />
+                <Route path="/tenderfeepayment" element={<TenderFeePayment/>}/>
+                <Route path="/workorderview" element={<WorkOrderView/>}/>
+                <Route path="/paymentgateway" element={<PaymentGateway/>}/>
+                <Route path="/ratevendor" element={<RateVendor/>}/>
 
                 {/* Evaluation (NEW) */}
                 <Route path="/technical-evaluation" element={<TechnicalEvaluation />} />
@@ -90,7 +99,8 @@ function App() {
                 <Route path="/vendor-contracts" element={<VendorContracts />} />
                 <Route path="/clarification-response/:bidId" element={<ClarificationResponse />} />
                 <Route path="/pending-clarifications" element={<PendingClarifications />} />
-
+                 <Route path="/contractdetails" element={<ContractDetails/>}/>
+                 
                 {/* Profile & Admin */}
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/audit-logs" element={<AuditLogs />} />

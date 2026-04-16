@@ -60,6 +60,17 @@ const adminMenuConfig = [
     icon: "bi-shield-lock",
     items: [{ label: "Audit Logs", to: "/audit-logs" }],
   },
+  {
+    key: "newpage",
+    title: "New page",
+    icon: "bi-shield-lock",
+    items: [{ label: "TenderFeePayment", to: "/tenderfeepayment" }],
+    items: [{ label: "WorkOrderView", to: "/workorderview" }],
+    items: [{ label: "PaymentGateway", to: "/paymentgateway" }],
+    items: [{ label: "RateVendor", to: "/ratevendor" }],
+    items: [{ label: "ContractDetails", to: "/contractdetails" }],
+
+  },
 ];
 
 // Vendor Menu (ROLE_VENDOR or ROLE_VENDER)
