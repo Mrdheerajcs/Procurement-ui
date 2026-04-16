@@ -1,11 +1,13 @@
 ﻿import React, { useState } from "react";
+import { useAuth } from "../../auth/useAuth";
 import "./dashboard.css";
 
-const kpis = [
+// Admin KPIs
+const adminKpis = [
   { icon: "bi-file-earmark-text-fill", label: "Total Tenders",    value: "12", sub: "+3 this month",      subColor: "text-success",  gradient: "kpi-blue"   },
   { icon: "bi-clipboard2-check-fill",  label: "Active MPRs",      value: "8",  sub: "5 pending approval", subColor: "text-warning",  gradient: "kpi-purple" },
   { icon: "bi-send-fill",              label: "Total Bids",       value: "24", sub: "12 under evaluation",subColor: "text-info",     gradient: "kpi-teal"   },
-  { icon: "bi-bag-check-fill",         label: "Purchase Orders",  value: "9",  sub: "â‚¹2.8 Cr total",     subColor: "text-success",  gradient: "kpi-orange" },
+  { icon: "bi-bag-check-fill",         label: "Purchase Orders",  value: "9",  sub: "₹2.8 Cr total",     subColor: "text-success",  gradient: "kpi-orange" },
   { icon: "bi-boxes",                  label: "Inventory Items",  value: "156",sub: "12 low-stock alerts",subColor: "text-danger",   gradient: "kpi-red"    },
   { icon: "bi-journal-check",          label: "Active Contracts", value: "5",  sub: "2 ending this Qtr", subColor: "text-info",     gradient: "kpi-green"  },
 ];
@@ -53,199 +55,284 @@ const deadlines = [
   { id: "PO/2025/001",  event: "Delivery Due",          date: "Apr 30, 2025", left: 39, urgency: "low"    },
 ];
 
+// Vendor Dashboard KPIs
+const vendorKpis = [
+  { icon: "bi-search", label: "Open Tenders", value: "8", sub: "New tenders available", gradient: "kpi-blue" },
+  { icon: "bi-send", label: "My Bids", value: "3", sub: "2 under evaluation", gradient: "kpi-purple" },
+  { icon: "bi-trophy", label: "Won Contracts", value: "1", sub: "Total value: ₹12L", gradient: "kpi-green" },
+  { icon: "bi-clock-history", label: "Pending Clarifications", value: "1", sub: "Response needed", gradient: "kpi-orange" },
+];
+
 const Dashboard = () => {
+  const { auth } = useAuth();
   const [activeTab, setActiveTab] = useState("all");
+  
+  // Get user role
+  const userRoles = auth?.roles || [];
+  const isAdmin = userRoles.some(role => role === "ROLE_ADMIN");
+  const username = auth?.username || "User";
 
-  const filtered = activeTab === "all" ? tenders : tenders.filter(t => t.status.toLowerCase().replace(" ","-") === activeTab);
+  const filtered = activeTab === "all" ? tenders : tenders.filter(t => t.status.toLowerCase().replace(" ", "-") === activeTab);
 
-  return (
-    <>
+  // Vendor Dashboard
+  if (!isAdmin) {
+    return (
+      <div className="ds-page">
+        <div className="container-fluid px-4 py-4">
+          {/* Page header */}
+          <div className="ds-page-header mb-4">
+            <div>
+              <h4 className="ds-page-title mb-1">Welcome back, {username}!</h4>
+              <p className="ds-page-sub mb-0">Vendor Dashboard - Track your bids and contracts</p>
+            </div>
+          </div>
 
-
-            <div className="ds-page">
-              <div className="container-fluid px-4 py-4">
-                {/* â”€â”€ Page header â”€â”€ */}
-                <div className="ds-page-header mb-4">
-                  <div>
-                    <h4 className="ds-page-title mb-1">Procurement Dashboard</h4>
-                    <p className="ds-page-sub mb-0">Overview for April 2026</p>
-                  </div>
-                  <div className="d-flex gap-2">
-                    <button className="btn ds-btn-outline"><i className="bi bi-download me-1" />Export</button>
-                    <button className="btn ds-btn-primary"><i className="bi bi-plus-lg me-1" />New Tender</button>
-                  </div>
+          {/* Vendor KPI cards */}
+          <div className="row g-3 mb-4">
+            {vendorKpis.map((k, i) => (
+              <div key={i} className="col-md-3 col-sm-6">
+                <div className={`ds-kpi-card ${k.gradient}`}>
+                  <div className="ds-kpi-icon"><i className={`bi ${k.icon}`} /></div>
+                  <div className="ds-kpi-value">{k.value}</div>
+                  <div className="ds-kpi-label">{k.label}</div>
+                  <div className="ds-kpi-sub">{k.sub}</div>
                 </div>
+              </div>
+            ))}
+          </div>
 
-                {/* â”€â”€ KPI strip â”€â”€ */}
-                <div className="row g-3 mb-4">
-                  {kpis.map((k, i) => (
-                    <div key={i} className="col-6 col-sm-4 col-xl-2">
-                      <div className={`ds-kpi-card ${k.gradient}`}>
-                        <div className="ds-kpi-icon">
-                          <i className={`bi ${k.icon}`} />
-                        </div>
-                        <div className="ds-kpi-value">{k.value}</div>
-                        <div className="ds-kpi-label">{k.label}</div>
-                        <div className={`ds-kpi-sub ${k.subColor}`}>{k.sub}</div>
+          {/* Quick Actions */}
+          <div className="row g-3">
+            <div className="col-md-4">
+              <div className="ds-card text-center p-4">
+                <i className="bi bi-search fs-1 text-primary" />
+                <h5 className="mt-3">Browse Tenders</h5>
+                <p className="text-muted">Find and participate in open tenders</p>
+                <button className="btn ds-btn-primary mt-2" onClick={() => window.location.href = "/searchtender"}>
+                  Search Tenders →
+                </button>
+              </div>
+            </div>
+            <div className="col-md-4">
+              <div className="ds-card text-center p-4">
+                <i className="bi bi-send fs-1 text-success" />
+                <h5 className="mt-3">Submit Bids</h5>
+                <p className="text-muted">Submit technical and financial bids</p>
+                <button className="btn ds-btn-primary mt-2" onClick={() => window.location.href = "/bid-submission"}>
+                  Submit Bid →
+                </button>
+              </div>
+            </div>
+            <div className="col-md-4">
+              <div className="ds-card text-center p-4">
+                <i className="bi bi-file-contract fs-1 text-info" />
+                <h5 className="mt-3">My Contracts</h5>
+                <p className="text-muted">View awarded contracts</p>
+                <button className="btn ds-btn-primary mt-2" onClick={() => window.location.href = "/vendor-contracts"}>
+                  View Contracts →
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="ds-card mt-4">
+            <div className="ds-card-head">
+              <span className="ds-card-title"><i className="bi bi-activity me-2 text-success" />Recent Activity</span>
+            </div>
+            <div className="ds-card-body p-0">
+              <div className="ds-feed">
+                {feed.slice(0, 3).map((f, i) => (
+                  <div key={i} className="ds-feed-item">
+                    <div className="ds-feed-icon" style={{ background: f.color + "18", color: f.color }}>
+                      <i className={`bi ${f.icon}`} />
+                    </div>
+                    <div className="flex-grow-1">
+                      <div className="ds-feed-text">{f.text}</div>
+                      <div className="ds-feed-time">{f.time}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Admin Dashboard (Original)
+  return (
+    <div className="ds-page">
+      <div className="container-fluid px-4 py-4">
+        {/* Page header */}
+        <div className="ds-page-header mb-4">
+          <div>
+            <h4 className="ds-page-title mb-1">Procurement Dashboard</h4>
+            <p className="ds-page-sub mb-0">Overview for April 2026</p>
+          </div>
+          <div className="d-flex gap-2">
+            <button className="btn ds-btn-outline"><i className="bi bi-download me-1" />Export</button>
+            <button className="btn ds-btn-primary"><i className="bi bi-plus-lg me-1" />New Tender</button>
+          </div>
+        </div>
+
+        {/* KPI strip */}
+        <div className="row g-3 mb-4">
+          {adminKpis.map((k, i) => (
+            <div key={i} className="col-6 col-sm-4 col-xl-2">
+              <div className={`ds-kpi-card ${k.gradient}`}>
+                <div className="ds-kpi-icon"><i className={`bi ${k.icon}`} /></div>
+                <div className="ds-kpi-value">{k.value}</div>
+                <div className="ds-kpi-label">{k.label}</div>
+                <div className={`ds-kpi-sub ${k.subColor}`}>{k.sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Tender pipeline */}
+        <div className="row g-3 mb-4">
+          <div className="col-12">
+            <div className="ds-card">
+              <div className="ds-card-head">
+                <span className="ds-card-title"><i className="bi bi-diagram-3-fill me-2 text-primary" />Tender Pipeline</span>
+              </div>
+              <div className="ds-card-body">
+                <div className="ds-pipeline">
+                  {pipeline.map((p, i) => (
+                    <React.Fragment key={i}>
+                      <div className="ds-pipe-step">
+                        <div className="ds-pipe-bubble" style={{ background: p.color }}>{p.count}</div>
+                        <div className="ds-pipe-label">{p.label}</div>
+                      </div>
+                      {i < pipeline.length - 1 && <div className="ds-pipe-arrow"><i className="bi bi-chevron-right" /></div>}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main content */}
+        <div className="row g-3 mb-4">
+          {/* Left column */}
+          <div className="col-xl-8 col-12 d-flex flex-column gap-3">
+            {/* Department breakdown */}
+            <div className="ds-card">
+              <div className="ds-card-head">
+                <span className="ds-card-title"><i className="bi bi-bar-chart-fill me-2 text-primary" />Tenders by Department</span>
+              </div>
+              <div className="ds-card-body">
+                {deptData.map((d, i) => (
+                  <div key={i} className="ds-dept-row">
+                    <span className="ds-dept-name">{d.dept}</span>
+                    <div className="ds-dept-bar-track">
+                      <div className="ds-dept-bar-fill" style={{ width: `${d.pct}%`, background: d.color }} />
+                    </div>
+                    <span className="ds-dept-count">{d.tenders} tenders</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Tenders table */}
+            <div className="ds-card">
+              <div className="ds-card-head">
+                <span className="ds-card-title"><i className="bi bi-table me-2 text-primary" />Recent Tenders</span>
+                <div className="ds-tab-group">
+                  {["all","published","evaluation","bid-open","awarded","closed"].map(t => (
+                    <button key={t} className={`ds-tab ${activeTab === t ? "active" : ""}`}
+                      onClick={() => setActiveTab(t)}>
+                      {t === "all" ? "All" : t.replace("-", " ").replace(/\b\w/g, c => c.toUpperCase())}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="ds-card-body p-0">
+                <div className="table-responsive">
+                  <table className="table ds-table mb-0">
+                    <thead>
+                      <tr><th>Tender ID</th><th>Title</th><th>Published</th><th>Deadline</th><th>Status</th><th className="text-center">Bids</th></tr>
+                    </thead>
+                    <tbody>
+                      {filtered.map((t, i) => (
+                        <tr key={i}>
+                          <td className="fw-semibold text-primary">{t.id}</td>
+                          <td>{t.title}</td>
+                          <td className="text-muted">{t.published}</td>
+                          <td className="text-muted">{t.deadline}</td>
+                          <td><span className={`ds-badge ${t.statusClass}`}>{t.status}</span></td>
+                          <td className="text-center fw-semibold">{t.bids}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right column */}
+          <div className="col-xl-4 col-12 d-flex flex-column gap-3">
+            {/* Upcoming Deadlines */}
+            <div className="ds-card">
+              <div className="ds-card-head">
+                <span className="ds-card-title"><i className="bi bi-alarm-fill me-2 text-danger" />Upcoming Deadlines</span>
+                <a href="#" className="ds-link">View all</a>
+              </div>
+              <div className="ds-card-body p-0">
+                {deadlines.map((d, i) => (
+                  <div key={i} className={`ds-deadline-item ds-dl-${d.urgency}`}>
+                    <div className="ds-dl-dot" />
+                    <div className="flex-grow-1">
+                      <div className="ds-dl-title">{d.id} — {d.event}</div>
+                      <div className="ds-dl-date">{d.date}</div>
+                    </div>
+                    <div className={`ds-dl-badge ds-dl-${d.urgency}`}>{d.left}d</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Activity feed */}
+            <div className="ds-card flex-grow-1">
+              <div className="ds-card-head">
+                <span className="ds-card-title"><i className="bi bi-activity me-2 text-success" />Activity Feed</span>
+              </div>
+              <div className="ds-card-body p-0">
+                <div className="ds-feed">
+                  {feed.map((f, i) => (
+                    <div key={i} className="ds-feed-item">
+                      <div className="ds-feed-icon" style={{ background: f.color + "18", color: f.color }}>
+                        <i className={`bi ${f.icon}`} />
+                      </div>
+                      <div className="flex-grow-1">
+                        <div className="ds-feed-text">{f.text}</div>
+                        <div className="ds-feed-time">{f.time}</div>
                       </div>
                     </div>
                   ))}
                 </div>
-
-                {/* â”€â”€ Tender pipeline â”€â”€ */}
-                <div className="row g-3 mb-4">
-                  <div className="col-12">
-                    <div className="ds-card">
-                      <div className="ds-card-head">
-                        <span className="ds-card-title"><i className="bi bi-diagram-3-fill me-2 text-primary" />Tender Pipeline</span>
-                      </div>
-                      <div className="ds-card-body">
-                        <div className="ds-pipeline">
-                          {pipeline.map((p, i) => (
-                            <React.Fragment key={i}>
-                              <div className="ds-pipe-step">
-                                <div className="ds-pipe-bubble" style={{ background: p.color }}>{p.count}</div>
-                                <div className="ds-pipe-label">{p.label}</div>
-                              </div>
-                              {i < pipeline.length - 1 && <div className="ds-pipe-arrow"><i className="bi bi-chevron-right" /></div>}
-                            </React.Fragment>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* â”€â”€ Main 3-col grid â”€â”€ */}
-                {/* â”€â”€ Tenders table + side panel â”€â”€ */}
-                <div className="row g-3 mb-4">
-                  {/* LEFT: Department chart + Tender table */}
-                  <div className="col-xl-8 col-12 d-flex flex-column gap-3">
-
-                    {/* Department breakdown */}
-                    <div className="ds-card">
-                      <div className="ds-card-head">
-                        <span className="ds-card-title"><i className="bi bi-bar-chart-fill me-2 text-primary" />Tenders by Department</span>
-                      </div>
-                      <div className="ds-card-body">
-                        {deptData.map((d, i) => (
-                          <div key={i} className="ds-dept-row">
-                            <span className="ds-dept-name">{d.dept}</span>
-                            <div className="ds-dept-bar-track">
-                              <div className="ds-dept-bar-fill" style={{ width: `${d.pct}%`, background: d.color }} />
-                            </div>
-                            <span className="ds-dept-count">{d.tenders} tenders</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Tenders table */}
-                    <div className="ds-card">
-                      <div className="ds-card-head">
-                        <span className="ds-card-title"><i className="bi bi-table me-2 text-primary" />Recent Tenders</span>
-                        <div className="ds-tab-group">
-                          {["all","published","evaluation","bid-open","awarded","closed"].map(t => (
-                            <button key={t} className={`ds-tab ${activeTab === t ? "active" : ""}`}
-                              onClick={() => setActiveTab(t)}>
-                              {t === "all" ? "All" : t.replace("-", " ").replace(/\b\w/g, c => c.toUpperCase())}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="ds-card-body p-0">
-                        <div className="table-responsive">
-                          <table className="table ds-table mb-0">
-                            <thead>
-                              <tr>
-                                <th>Tender ID</th>
-                                <th>Title</th>
-                                <th>Published</th>
-                                <th>Deadline</th>
-                                <th>Status</th>
-                                <th className="text-center">Bids</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {filtered.map((t, i) => (
-                                <tr key={i}>
-                                  <td className="fw-semibold text-primary">{t.id}</td>
-                                  <td>{t.title}</td>
-                                  <td className="text-muted">{t.published}</td>
-                                  <td className="text-muted">{t.deadline}</td>
-                                  <td><span className={`ds-badge ${t.statusClass}`}>{t.status}</span></td>
-                                  <td className="text-center fw-semibold">{t.bids}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* RIGHT: Deadlines + Activity feed */}
-                  <div className="col-xl-4 col-12 d-flex flex-column gap-3">
-
-                    {/* Upcoming Deadlines */}
-                    <div className="ds-card">
-                      <div className="ds-card-head">
-                        <span className="ds-card-title"><i className="bi bi-alarm-fill me-2 text-danger" />Upcoming Deadlines</span>
-                        <a href="#" className="ds-link">View all</a>
-                      </div>
-                      <div className="ds-card-body p-0">
-                        {deadlines.map((d, i) => (
-                          <div key={i} className={`ds-deadline-item ds-dl-${d.urgency}`}>
-                            <div className="ds-dl-dot" />
-                            <div className="flex-grow-1">
-                              <div className="ds-dl-title">{d.id} â€” {d.event}</div>
-                              <div className="ds-dl-date">{d.date}</div>
-                            </div>
-                            <div className={`ds-dl-badge ds-dl-${d.urgency}`}>{d.left}d</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Activity feed */}
-                    <div className="ds-card flex-grow-1">
-                      <div className="ds-card-head">
-                        <span className="ds-card-title"><i className="bi bi-activity me-2 text-success" />Activity Feed</span>
-                      </div>
-                      <div className="ds-card-body p-0">
-                        <div className="ds-feed">
-                          {feed.map((f, i) => (
-                            <div key={i} className="ds-feed-item">
-                              <div className="ds-feed-icon" style={{ background: f.color + "18", color: f.color }}>
-                                <i className={`bi ${f.icon}`} />
-                              </div>
-                              <div className="flex-grow-1">
-                                <div className="ds-feed-text">{f.text}</div>
-                                <div className="ds-feed-time">{f.time}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Quick actions */}
-                    <div className="ds-card">
-                      <div className="ds-card-head">
-                        <span className="ds-card-title"><i className="bi bi-lightning-fill me-2 text-warning" />Quick Actions</span>
-                      </div>
-                      <div className="ds-card-body d-flex flex-column gap-2">
-                        <button className="btn ds-btn-primary w-100"><i className="bi bi-plus-circle me-2" />New Tender</button>
-                        <button className="btn ds-btn-outline w-100"><i className="bi bi-file-earmark-pdf me-2" />Generate Report</button>
-                        <button className="btn ds-btn-outline w-100"><i className="bi bi-graph-up me-2" />View Analytics</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {/* â”€â”€ end â”€â”€ */}
               </div>
             </div>
-    </>
+
+            {/* Quick actions */}
+            <div className="ds-card">
+              <div className="ds-card-head">
+                <span className="ds-card-title"><i className="bi bi-lightning-fill me-2 text-warning" />Quick Actions</span>
+              </div>
+              <div className="ds-card-body d-flex flex-column gap-2">
+                <button className="btn ds-btn-primary w-100"><i className="bi bi-plus-circle me-2" />New Tender</button>
+                <button className="btn ds-btn-outline w-100"><i className="bi bi-file-earmark-pdf me-2" />Generate Report</button>
+                <button className="btn ds-btn-outline w-100"><i className="bi bi-graph-up me-2" />View Analytics</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

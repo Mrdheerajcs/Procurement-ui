@@ -11,6 +11,7 @@ const Layout = lazy(() => import("./Views/layout"));
 const Login = lazy(() => import("./Views/Login"));
 const ForceChangePassword = lazy(() => import("./Components/ForceChangePassword"));
 const ProcurementLanding = lazy(() => import("./Components/ProcurementLanding"));
+const Unauthorized = lazy(() => import("./Views/Unauthorized"));
 
 // Dashboard
 const Dashboard = lazy(() => import("./Views/Dashboard"));
@@ -33,6 +34,8 @@ const CommercialEvaluation = lazy(() => import("./Views/pages/CommercialEvaluati
 // Vendor Modules
 const BidSubmission = lazy(() => import("./Views/pages/BidSubmission"));
 const VendorContracts = lazy(() => import("./Views/VendorContracts"));
+const ClarificationResponse = lazy(() => import("./Views/pages/ClarificationResponse"));
+const PendingClarifications = lazy(() => import("./Views/pages/PendingClarifications"));
 
 // Profile & Admin
 const Profile = lazy(() => import("./Views/Profile"));
@@ -57,7 +60,7 @@ function App() {
             {/* Public Routes */}
             <Route path="/" element={<Login />} />
             <Route path="/tenders" element={<ProcurementLanding />} />
-
+            <Route path="/unauthorized" element={<Unauthorized />} />
             {/* Protected Routes */}
             <Route element={<PrivateRoute />}>
               <Route path="/force-change-password" element={<ForceChangePassword />} />
@@ -85,6 +88,8 @@ function App() {
                 {/* Vendor Portal */}
                 <Route path="/bid-submission/:tenderId?" element={<BidSubmission />} />
                 <Route path="/vendor-contracts" element={<VendorContracts />} />
+                <Route path="/clarification-response/:bidId" element={<ClarificationResponse />} />
+                <Route path="/pending-clarifications" element={<PendingClarifications />} />
 
                 {/* Profile & Admin */}
                 <Route path="/profile" element={<Profile />} />

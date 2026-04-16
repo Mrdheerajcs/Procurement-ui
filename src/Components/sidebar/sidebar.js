@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import "./sidebar.css";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../auth/useAuth";
 import eProcLogo from "../../assets/images/e-proc-logo.png";
 
-const menuConfig = [
+// Admin Menu (ROLE_ADMIN)
+const adminMenuConfig = [
   {
     key: "dashboard",
     title: "Dashboard",
@@ -20,6 +22,12 @@ const menuConfig = [
       { label: "MPR Approval", to: "/mpr-approval" },
       { label: "MPR History", to: "/mpr-history" },
     ],
+  },
+  {
+    key: "mpr-approval-levels",
+    title: "MPR Approval Levels",
+    icon: "bi-diagram-3",
+    items: [{ label: "Pending Approvals", to: "/mpr-approval-levels" }],
   },
   {
     key: "tender",
@@ -41,15 +49,6 @@ const menuConfig = [
     ],
   },
   {
-    key: "vendor",
-    title: "Vendor Portal",
-    icon: "bi-building",
-    items: [
-      { label: "Bid Participation", to: "/bid-submission" },
-      { label: "My Contracts", to: "/vendor-contracts" },
-    ],
-  },
-  {
     key: "profile",
     title: "Profile",
     icon: "bi-person-circle",
@@ -61,32 +60,82 @@ const menuConfig = [
     icon: "bi-shield-lock",
     items: [{ label: "Audit Logs", to: "/audit-logs" }],
   },
+];
+
+// Vendor Menu (ROLE_VENDOR or ROLE_VENDER)
+const vendorMenuConfig = [
   {
-  key: "mpr-approval-levels",
-  title: "MPR Approval Levels",
-  icon: "bi-diagram-3",
-  items: [
-    { label: "Pending Approvals", to: "/mpr-approval-levels" },
-  ],
-},
+    key: "dashboard",
+    title: "Dashboard",
+    icon: "bi-speedometer2",
+    items: [{ label: "Overview", to: "/dashboard" }],
+  },
+  {
+    key: "tender",
+    title: "Tender",
+    icon: "bi-megaphone",
+    items: [{ label: "Search Tender", to: "/searchtender" }],
+  },
+  {
+    key: "vendor",
+    title: "Vendor Portal",
+    icon: "bi-building",
+    items: [
+      { label: "Bid Participation", to: "/bid-submission" },
+      { label: "My Contracts", to: "/vendor-contracts" },
+      { label: "Pending Clarifications", to: "/pending-clarifications" },
+    ],
+  },
+  {
+    key: "profile",
+    title: "Profile",
+    icon: "bi-person-circle",
+    items: [{ label: "My Profile", to: "/profile" }],
+  },
 ];
 
 const Sidebar = ({ collapsed, mobileOpen, onCloseMobile }) => {
+  const { auth } = useAuth();
   const location = useLocation();
   const [openMenu, setOpenMenu] = useState("");
+  
+  // Get user roles from auth
+  const userRoles = auth?.roles || [];
+  
+  // Debug log
+  console.log("📱 Sidebar - User Roles:", userRoles);
+  
+  // Check role (handle both spellings)
+  const isAdmin = userRoles.some(role => role === "ROLE_ADMIN");
+  const isVendor = userRoles.some(role => role === "ROLE_VENDOR" || role === "ROLE_VENDER");
+  
+  console.log("📱 Sidebar - isAdmin:", isAdmin, "isVendor:", isVendor);
+  
+  // Select menu based on role
+  let menuConfig = [];
+  if (isAdmin) {
+    menuConfig = adminMenuConfig;
+  } else if (isVendor) {
+    menuConfig = vendorMenuConfig;
+  }
 
   useEffect(() => {
     const activeGroup = menuConfig.find((section) =>
       section.items.some((item) => location.pathname.startsWith(item.to))
     );
     setOpenMenu(activeGroup?.key || "");
-  }, [location.pathname]);
+  }, [location.pathname, menuConfig]);
 
   const toggleMenu = (menu) => {
     setOpenMenu((prev) => (prev === menu ? "" : menu));
   };
 
   const isActive = (path) => location.pathname === path;
+
+  // Don't render sidebar if no menu items
+  if (menuConfig.length === 0) {
+    return null;
+  }
 
   return (
     <aside

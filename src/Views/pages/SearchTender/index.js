@@ -17,11 +17,35 @@ const SearchTender = () => {
   const [filteredTenders, setFilteredTenders] = useState([]);
   const [selectedTender, setSelectedTender] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [participatedTenders, setParticipatedTenders] = useState({});
 
   // Fetch all published tenders
   useEffect(() => {
     fetchPublishedTenders();
   }, []);
+
+const checkParticipation = async (tenderId) => {
+    try {
+        const res = await apiClient.get(`/api/bids/check-participation/${tenderId}`);
+        if (res.status === "SUCCESS") {
+            setParticipatedTenders(prev => ({
+                ...prev,
+                [tenderId]: res.data
+            }));
+        }
+    } catch (err) {
+        console.error("Error checking participation:", err);
+    }
+};
+
+
+useEffect(() => {
+    if (filteredTenders.length > 0) {
+        filteredTenders.forEach(tender => {
+            checkParticipation(tender.tenderId);
+        });
+    }
+}, [filteredTenders]);
 
   const fetchPublishedTenders = async () => {
     setLoading(true);
@@ -181,12 +205,14 @@ const SearchTender = () => {
                 {getBiddingStatus(selectedTender).text}
               </span>
               <button
-                className="btn btn-primary"
-                disabled={!isBiddingOpen(selectedTender)}
-                onClick={() => handleParticipate(selectedTender.tenderId)}
-              >
-                <i className="bi bi-send me-2" />Participate in Bid
-              </button>
+    className="btn btn-primary"
+    disabled={!isBiddingOpen(selectedTender) || participatedTenders[selectedTender.tenderId]}
+    onClick={() => handleParticipate(selectedTender.tenderId)}
+    title={participatedTenders[selectedTender.tenderId] ? "You have already submitted a bid for this tender" : ""}
+>
+    <i className="bi bi-send me-2" />
+    {participatedTenders[selectedTender.tenderId] ? "Already Participated" : "Participate in Bid"}
+</button>
             </div>
           </div>
         </div>
@@ -288,12 +314,14 @@ const SearchTender = () => {
                                   <i className="bi bi-eye me-1" />View
                                 </button>
                                 <button
-                                  className="btn btn-sm btn-primary"
-                                  disabled={status.text !== "Open"}
-                                  onClick={() => handleParticipate(tender.tenderId)}
-                                >
-                                  <i className="bi bi-send me-1" />Bid
-                                </button>
+    className="btn btn-sm btn-primary"
+    disabled={status.text !== "Open" || participatedTenders[tender.tenderId]}
+    onClick={() => handleParticipate(tender.tenderId)}
+    title={participatedTenders[tender.tenderId] ? "You have already submitted a bid for this tender" : ""}
+>
+    <i className="bi bi-send me-1" />
+    {participatedTenders[tender.tenderId] ? "Already Participated" : "Bid"}
+</button>
                               </td>
                             </tr>
                           );

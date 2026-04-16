@@ -7,16 +7,14 @@ const BidSubmission = () => {
   const navigate = useNavigate();
   const [tender, setTender] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState("technical");
-  const [bidTechnicalId, setBidTechnicalId] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  
-  // Check if user is vendor - if not, show error
-  const [isVendor, setIsVendor] = useState(true);
-  const [vendorProfile, setVendorProfile] = useState(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [draftSaved, setDraftSaved] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+const [submissionStatus, setSubmissionStatus] = useState(null);
 
-  const [technicalData, setTechnicalData] = useState({
+  const [formData, setFormData] = useState({
     companyName: "",
     gstNumber: "",
     panNumber: "",
@@ -27,9 +25,6 @@ const BidSubmission = () => {
     authorizationDetails: "",
     msmeNumber: "",
     isMsme: false,
-  });
-  
-  const [financialData, setFinancialData] = useState({
     totalBidAmount: "",
     gstPercent: "",
     totalCost: "",
@@ -40,19 +35,19 @@ const BidSubmission = () => {
     emdValue: "",
     emdExemptionDetails: "",
   });
-  
+
   const [technicalFiles, setTechnicalFiles] = useState([]);
   const [financialFiles, setFinancialFiles] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // Fetch tender details and vendor profile
+  // Load tender details and draft on mount
   useEffect(() => {
     if (!tenderId || tenderId === "undefined") {
       setError("Invalid tender ID");
       return;
     }
     fetchTenderDetails();
-    fetchVendorProfile();
+    loadExistingDraft();
   }, [tenderId]);
 
   const fetchTenderDetails = async () => {
@@ -62,244 +57,281 @@ const BidSubmission = () => {
         setTender(res.data);
       }
     } catch (err) {
-      console.error("Error fetching tender:", err);
       setError("Failed to load tender details");
     }
   };
 
-  const fetchVendorProfile = async () => {
+  const loadExistingDraft = async () => {
     try {
-      const res = await apiClient.get("/api/vendors/profile");
-      if (res.status === "SUCCESS") {
-        const vendor = res.data;
-        setVendorProfile(vendor);
-        setTechnicalData(prev => ({
+      const res = await apiClient.get(`/api/bids/technical/draft/${tenderId}`);
+      if (res.status === "SUCCESS" && res.data) {
+        setFormData(prev => ({
           ...prev,
-          companyName: vendor.vendorName || "",
-          gstNumber: vendor.gstNo || "",
-          panNumber: vendor.panNo || "",
-          bankName: vendor.bankName || "",
-          accountNumber: vendor.accountNo || "",
-          ifscCode: vendor.ifscCode || "",
+          companyName: res.data.companyName || "",
+          gstNumber: res.data.gstNumber || "",
+          panNumber: res.data.panNumber || "",
+          makeIndiaClass: res.data.makeIndiaClass || "",
+          bidderTurnover: res.data.bidderTurnover || "",
+          oemTurnover: res.data.oemTurnover || "",
+          oemName: res.data.oemName || "",
+          authorizationDetails: res.data.authorizationDetails || "",
+          msmeNumber: res.data.msmeNumber || "",
+          isMsme: res.data.isMsme || false,
         }));
-        setIsVendor(true);
+        setDraftSaved(true);
       }
     } catch (err) {
-      console.error("Error fetching vendor profile:", err);
-      // If not vendor, show message but don't redirect
-      setIsVendor(false);
-      setError("You are not registered as a vendor. Please contact admin.");
+      console.log("No draft found");
+    }
+  };
+
+  const saveDraft = async () => {
+    setLoading(true);
+    const formDataToSend = new FormData();
+
+    const technicalData = {
+      tenderId: parseInt(tenderId),
+      companyName: formData.companyName,
+      gstNumber: formData.gstNumber,
+      panNumber: formData.panNumber,
+      makeIndiaClass: formData.makeIndiaClass,
+      bidderTurnover: parseFloat(formData.bidderTurnover) || 0,
+      oemTurnover: parseFloat(formData.oemTurnover) || 0,
+      oemName: formData.oemName,
+      authorizationDetails: formData.authorizationDetails,
+      msmeNumber: formData.msmeNumber,
+      isMsme: formData.isMsme,
+    };
+
+    formDataToSend.append("data", new Blob([JSON.stringify(technicalData)], { type: "application/json" }));
+    technicalFiles.forEach(file => formDataToSend.append("files", file));
+
+    try {
+      const res = await apiClient.post("/api/bids/technical/draft", formDataToSend, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      if (res.status === "SUCCESS") {
+        setDraftSaved(true);
+        alert("Draft saved successfully!");
+      }
+    } catch (err) {
+      console.error("Error saving draft:", err);
+      alert("Failed to save draft");
+    } finally {
+      setLoading(false);
     }
   };
 
   const validateTechnical = () => {
     const errors = {};
-    if (!technicalData.companyName) errors.companyName = "Company name is required";
-    if (!technicalData.gstNumber) errors.gstNumber = "GST number is required";
-    if (!technicalData.panNumber) errors.panNumber = "PAN number is required";
-    if (!technicalData.makeIndiaClass) errors.makeIndiaClass = "Make in India class is required";
-    if (!technicalData.bidderTurnover) errors.bidderTurnover = "Bidder turnover is required";
-    if (!technicalData.oemTurnover) errors.oemTurnover = "OEM turnover is required";
-    if (!technicalData.oemName) errors.oemName = "OEM name is required";
-    if (!technicalData.authorizationDetails) errors.authorizationDetails = "Authorization details are required";
-    
+    if (!formData.companyName) errors.companyName = "Company name required";
+    if (!formData.gstNumber) errors.gstNumber = "GST number required";
+    if (!formData.panNumber) errors.panNumber = "PAN number required";
+    if (!formData.makeIndiaClass) errors.makeIndiaClass = "Make in India class required";
+    if (!formData.bidderTurnover) errors.bidderTurnover = "Bidder turnover required";
+    if (!formData.oemTurnover) errors.oemTurnover = "OEM turnover required";
+    if (!formData.oemName) errors.oemName = "OEM name required";
+    if (!formData.authorizationDetails) errors.authorizationDetails = "Authorization details required";
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const validateFinancial = () => {
     const errors = {};
-    if (!financialData.totalBidAmount) errors.totalBidAmount = "Total bid amount is required";
-    if (!financialData.gstPercent) errors.gstPercent = "GST percentage is required";
-    if (!financialData.totalCost) errors.totalCost = "Total cost is required";
-    if (!financialData.bankName) errors.bankName = "Bank name is required";
-    if (!financialData.accountNumber) errors.accountNumber = "Account number is required";
-    if (!financialData.ifscCode) errors.ifscCode = "IFSC code is required";
-    
+    if (!formData.totalBidAmount) errors.totalBidAmount = "Total bid amount required";
+    if (!formData.gstPercent) errors.gstPercent = "GST percentage required";
+    if (!formData.bankName) errors.bankName = "Bank name required";
+    if (!formData.accountNumber) errors.accountNumber = "Account number required";
+    if (!formData.ifscCode) errors.ifscCode = "IFSC code required";
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  // Auto-calculate total cost
-  useEffect(() => {
-    if (financialData.totalBidAmount && financialData.gstPercent) {
-      const total = parseFloat(financialData.totalBidAmount) * (1 + parseFloat(financialData.gstPercent) / 100);
-      setFinancialData(prev => ({ ...prev, totalCost: total.toFixed(2) }));
-    }
-  }, [financialData.totalBidAmount, financialData.gstPercent]);
-
-  const handleTechnicalChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setTechnicalData(prev => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value
-    }));
-    if (fieldErrors[name]) {
-      setFieldErrors(prev => ({ ...prev, [name]: "" }));
-    }
+  const formatNumber = (value) => {
+    if (!value || value === "") return "";
+    const num = parseFloat(value);
+    if (isNaN(num)) return "";
+    return num.toLocaleString("en-IN");
   };
 
-  const handleFinancialChange = (e) => {
+  const handleNumberChange = (e) => {
     const { name, value } = e.target;
-    setFinancialData(prev => ({ ...prev, [name]: value }));
-    if (fieldErrors[name]) {
-      setFieldErrors(prev => ({ ...prev, [name]: "" }));
+
+    // ✅ Allow empty string (for backspace)
+    if (value === "") {
+      setFormData(prev => ({ ...prev, [name]: "" }));
+
+      // Recalculate total cost if needed
+      if (name === "totalBidAmount" || name === "gstPercent") {
+        const bidAmount = name === "totalBidAmount" ? 0 : parseFloat(formData.totalBidAmount) || 0;
+        const gst = name === "gstPercent" ? 0 : parseFloat(formData.gstPercent) || 0;
+        const total = bidAmount * (1 + gst / 100);
+        setFormData(prev => ({ ...prev, totalCost: total.toFixed(2) }));
+      }
+      return;
+    }
+
+    // ✅ Allow only numbers and decimal point
+    if (!/^\d*\.?\d*$/.test(value)) return;
+
+    // Remove commas for storing
+    const rawValue = value.replace(/,/g, "");
+
+    setFormData(prev => ({ ...prev, [name]: rawValue }));
+
+    // Auto-calculate total cost
+    if (name === "totalBidAmount" || name === "gstPercent") {
+      const bidAmount = name === "totalBidAmount"
+        ? parseFloat(rawValue) || 0
+        : parseFloat(formData.totalBidAmount) || 0;
+      const gst = name === "gstPercent"
+        ? parseFloat(rawValue) || 0
+        : parseFloat(formData.gstPercent) || 0;
+      const total = bidAmount * (1 + gst / 100);
+      setFormData(prev => ({ ...prev, totalCost: total.toFixed(2) }));
     }
   };
 
-  const handleTechnicalFileChange = (e) => {
-    setTechnicalFiles(Array.from(e.target.files));
+  useEffect(() => {
+    checkSubmissionStatus();
+}, [tenderId]);
+
+const checkSubmissionStatus = async () => {
+    try {
+        const res = await apiClient.get(`/api/bids/check-participation/${tenderId}`);
+        if (res.status === "SUCCESS" && res.data) {
+            setHasSubmitted(true);
+            // Get detailed status
+            const statusRes = await apiClient.get(`/api/bids/technical/draft/${tenderId}`);
+            if (statusRes.status === "SUCCESS" && statusRes.data) {
+                setSubmissionStatus(statusRes.data.evaluationStatus);
+            }
+        }
+    } catch (err) {
+        console.log("Not submitted yet");
+    }
+};
+
+  const handleNext = async () => {
+    if (currentStep === 1) {
+      if (validateTechnical()) {
+        // Save draft before moving to next step
+        setLoading(true);
+        const formDataToSend = new FormData();
+        const technicalData = {
+          tenderId: parseInt(tenderId),
+          companyName: formData.companyName,
+          gstNumber: formData.gstNumber,
+          panNumber: formData.panNumber,
+          makeIndiaClass: formData.makeIndiaClass,
+          bidderTurnover: parseFloat(formData.bidderTurnover) || 0,
+          oemTurnover: parseFloat(formData.oemTurnover) || 0,
+          oemName: formData.oemName,
+          authorizationDetails: formData.authorizationDetails,
+          msmeNumber: formData.msmeNumber,
+          isMsme: formData.isMsme,
+        };
+        formDataToSend.append("data", new Blob([JSON.stringify(technicalData)], { type: "application/json" }));
+        technicalFiles.forEach(file => formDataToSend.append("files", file));
+
+        try {
+          await apiClient.post("/api/bids/technical/draft", formDataToSend, {
+            headers: { "Content-Type": "multipart/form-data" }
+          });
+          setCurrentStep(2);
+        } catch (err) {
+          alert("Failed to save draft. Please try again.");
+        } finally {
+          setLoading(false);
+        }
+      }
+    } else if (currentStep === 2 && validateFinancial()) {
+      setCurrentStep(3);
+    }
   };
 
-  const handleFinancialFileChange = (e) => {
-    setFinancialFiles(Array.from(e.target.files));
-  };
+  const handleBack = () => setCurrentStep(currentStep - 1);
 
-  const submitTechnicalBid = async () => {
-    if (!validateTechnical()) return;
-    
+  const handleSubmitFinal = async () => {
+    if (!validateTechnical() || !validateFinancial()) {
+      alert("Please fill all required fields");
+      return;
+    }
+
     setLoading(true);
-    setError("");
+    const formDataToSend = new FormData();
 
-    const formData = new FormData();
-    formData.append("data", new Blob([JSON.stringify({
+    const finalData = {
       tenderId: parseInt(tenderId),
-      ...technicalData,
-      isMsme: technicalData.isMsme,
-    })], { type: "application/json" }));
+      companyName: formData.companyName,
+      gstNumber: formData.gstNumber,
+      panNumber: formData.panNumber,
+      makeIndiaClass: formData.makeIndiaClass,
+      bidderTurnover: parseFloat(formData.bidderTurnover) || 0,
+      oemTurnover: parseFloat(formData.oemTurnover) || 0,
+      oemName: formData.oemName,
+      authorizationDetails: formData.authorizationDetails,
+      msmeNumber: formData.msmeNumber,
+      isMsme: formData.isMsme,
+      totalBidAmount: parseFloat(formData.totalBidAmount) || 0,
+      gstPercent: parseFloat(formData.gstPercent) || 0,
+      totalCost: parseFloat(formData.totalCost) || 0,
+      bankName: formData.bankName,
+      accountNumber: formData.accountNumber,
+      ifscCode: formData.ifscCode,
+      emdNumber: formData.emdNumber,
+      emdValue: parseFloat(formData.emdValue) || 0,
+      emdExemptionDetails: formData.emdExemptionDetails,
+    };
 
-    technicalFiles.forEach(file => {
-      formData.append("files", file);
-    });
+    formDataToSend.append("data", new Blob([JSON.stringify(finalData)], { type: "application/json" }));
+    technicalFiles.forEach(file => formDataToSend.append("files", file));
+    financialFiles.forEach(file => formDataToSend.append("files", file));
 
     try {
-      const res = await apiClient.post("/api/bids/technical", formData, {
+      const res = await apiClient.post("/api/bids/final", formDataToSend, {
         headers: { "Content-Type": "multipart/form-data" }
       });
-      
       if (res.status === "SUCCESS") {
-        setBidTechnicalId(res.data.bidTechnicalId);
-        setSuccess("Technical bid submitted successfully! Now proceed to financial bid.");
-        setStep("financial");
-      } else {
-        setError(res.message || "Failed to submit technical bid");
+        setSuccess("Bid submitted successfully! Awaiting technical evaluation.");
+        setTimeout(() => navigate("/vendor-contracts"), 3000);
       }
     } catch (err) {
-      setError(err.message || "Server error");
+      setError(err.message || "Submission failed");
     } finally {
       setLoading(false);
     }
   };
 
-const submitFinancialBid = async () => {
-    if (!validateFinancial()) return;
-    
-    setLoading(true);
-    setError("");
-
-    // ✅ First check if technical bid is qualified
-    try {
-        const techCheck = await apiClient.get(`/api/bids/technical/${bidTechnicalId}`);
-        if (techCheck.status === "SUCCESS") {
-            if (techCheck.data.evaluationStatus !== "QUALIFIED") {
-                setError("Your technical bid is not qualified yet. Please wait for admin evaluation.");
-                setLoading(false);
-                return;
-            }
-        }
-    } catch (err) {
-        console.error("Error checking technical status:", err);
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    let newValue = type === "checkbox" ? checked : value;
+    if (["totalBidAmount", "bidderTurnover", "oemTurnover", "emdValue"].includes(name)) {
+      newValue = newValue.replace(/,/g, "");
     }
+    setFormData(prev => ({ ...prev, [name]: newValue }));
 
-    const formData = new FormData();
-    formData.append("data", new Blob([JSON.stringify({
-        tenderId: parseInt(tenderId),
-        bidTechnicalId: bidTechnicalId,
-        ...financialData,
-    })], { type: "application/json" }));
-
-    financialFiles.forEach(file => {
-        formData.append("files", file);
-    });
-
-    try {
-        const res = await apiClient.post("/api/bids/financial", formData, {
-            headers: { "Content-Type": "multipart/form-data" }
-        });
-        
-        if (res.status === "SUCCESS") {
-            setSuccess("Bid submitted successfully!");
-            setTimeout(() => {
-                navigate("/vendor-contracts");
-            }, 3000);
-        } else {
-            setError(res.message || "Failed to submit financial bid");
-        }
-    } catch (err) {
-        setError(err.message || "Server error");
-    } finally {
-        setLoading(false);
+    if (name === "totalBidAmount" || name === "gstPercent") {
+      const bidAmount = name === "totalBidAmount"
+        ? parseFloat(newValue) || 0
+        : parseFloat(formData.totalBidAmount) || 0;
+      const gst = name === "gstPercent"
+        ? parseFloat(newValue) || 0
+        : parseFloat(formData.gstPercent) || 0;
+      const total = bidAmount * (1 + gst / 100);
+      setFormData(prev => ({ ...prev, totalCost: total.toFixed(2) }));
     }
-};
+  };
 
   const getLevelBadge = (level) => {
     const colors = { 1: "danger", 2: "warning", 3: "info" };
     return <span className={`badge bg-${colors[level]} ms-2`} style={{ fontSize: "10px" }}>Level {level}</span>;
   };
 
-  // If no tenderId or invalid
-  if (!tenderId || tenderId === "undefined") {
-    return (
-      <div className="container-fluid">
-        <div className="alert alert-danger m-4">
-          <h5>Invalid Tender</h5>
-          <p>Please select a valid tender from the <a href="/searchtender">Search Tender</a> page.</p>
-          <button className="btn btn-primary mt-2" onClick={() => navigate("/searchtender")}>
-            Go to Search Tender
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isVendor) {
-    return (
-      <div className="container-fluid">
-        <div className="alert alert-warning m-4">
-          <h5>Vendor Access Required</h5>
-          <p>You need to be registered as a vendor to participate in bids.</p>
-          <button className="btn btn-primary mt-2" onClick={() => navigate("/")}>
-            Contact Admin
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   if (!tender) {
     return (
       <div className="container-fluid text-center py-5">
         <div className="spinner-border text-primary" role="status" />
-        <p>Loading tender details...</p>
-      </div>
-    );
-  }
-
-  const isBiddingOpen = () => {
-    const today = new Date().toISOString().split("T")[0];
-    return tender.bidStartDate <= today && tender.bidEndDate >= today;
-  };
-
-  if (!isBiddingOpen()) {
-    return (
-      <div className="container-fluid">
-        <div className="alert alert-danger m-4">
-          <h5>Bidding Closed</h5>
-          <p>This tender is not accepting bids at this time.</p>
-          <button className="btn btn-primary mt-2" onClick={() => navigate("/searchtender")}>
-            Back to Search
-          </button>
-        </div>
       </div>
     );
   }
@@ -313,61 +345,67 @@ const submitFinancialBid = async () => {
 
       {/* Progress Steps */}
       <div className="row mb-4">
-        <div className="col-md-6 mx-auto">
+        <div className="col-md-8 mx-auto">
           <div className="d-flex justify-content-between">
-            <div className={`text-center ${step === "technical" ? "text-primary fw-bold" : step === "financial" ? "text-success" : "text-muted"}`}>
-              <div className={`rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 ${step === "technical" ? "bg-primary text-white" : step === "financial" ? "bg-success text-white" : "bg-secondary text-white"}`} style={{ width: 40, height: 40 }}>
-                1
-              </div>
+            <div className={`text-center ${currentStep >= 1 ? "text-primary fw-bold" : "text-muted"}`}>
+              <div className={`rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 ${currentStep >= 1 ? "bg-primary text-white" : "bg-secondary text-white"}`} style={{ width: 40, height: 40 }}>1</div>
               <small>Technical</small>
             </div>
             <div className="flex-grow-1 align-self-center mx-2">
               <div className="progress" style={{ height: 4 }}>
-                <div className="progress-bar bg-success" style={{ width: step === "financial" ? "100%" : "0%" }} />
+                <div className="progress-bar bg-success" style={{ width: currentStep >= 2 ? "100%" : "0%" }} />
               </div>
             </div>
-            <div className={`text-center ${step === "financial" ? "text-primary fw-bold" : "text-muted"}`}>
-              <div className={`rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 ${step === "financial" ? "bg-primary text-white" : "bg-secondary text-white"}`} style={{ width: 40, height: 40 }}>
-                2
-              </div>
+            <div className={`text-center ${currentStep >= 2 ? "text-primary fw-bold" : "text-muted"}`}>
+              <div className={`rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 ${currentStep >= 2 ? "bg-primary text-white" : "bg-secondary text-white"}`} style={{ width: 40, height: 40 }}>2</div>
               <small>Financial</small>
+            </div>
+            <div className="flex-grow-1 align-self-center mx-2">
+              <div className="progress" style={{ height: 4 }}>
+                <div className="progress-bar bg-success" style={{ width: currentStep >= 3 ? "100%" : "0%" }} />
+              </div>
+            </div>
+            <div className={`text-center ${currentStep >= 3 ? "text-primary fw-bold" : "text-muted"}`}>
+              <div className={`rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 ${currentStep >= 3 ? "bg-primary text-white" : "bg-secondary text-white"}`} style={{ width: 40, height: 40 }}>3</div>
+              <small>Review & Submit</small>
             </div>
           </div>
         </div>
       </div>
 
-      {error && <div className="alert alert-danger">{error}<button type="button" className="btn-close float-end" onClick={() => setError("")} /></div>}
+      {error && <div className="alert alert-danger">{error}<button className="btn-close float-end" onClick={() => setError("")} /></div>}
       {success && <div className="alert alert-success">{success}</div>}
 
-      {/* TECHNICAL SECTION */}
-      {step === "technical" && (
+      {/* Step 1: Technical */}
+      {currentStep === 1 && (
         <div className="card">
           <div className="card-header bg-light">
-            <h6 className="mb-0 fw-semibold">Cover 1: Technical Bid</h6>
+            <h6 className="mb-0 fw-semibold">Step 1: Technical Bid</h6>
+            <small>Your technical data will be saved as draft. You can continue later.</small>
           </div>
           <div className="card-body">
             <div className="row g-3">
               <div className="col-md-6">
                 <div className="form-floating">
-                  <input type="text" className={`form-control ${fieldErrors.companyName ? "is-invalid" : ""}`} id="companyName" name="companyName" value={technicalData.companyName} onChange={handleTechnicalChange} />
+                  <input type="text" className="form-control" name="companyName" value={formData.companyName} onChange={handleChange} />
                   <label>Company Name {getLevelBadge(1)}</label>
                 </div>
               </div>
               <div className="col-md-6">
                 <div className="form-floating">
-                  <input type="text" className={`form-control ${fieldErrors.gstNumber ? "is-invalid" : ""}`} id="gstNumber" name="gstNumber" value={technicalData.gstNumber} onChange={handleTechnicalChange} />
+                  <input type="text" className="form-control" name="gstNumber" value={formData.gstNumber} onChange={handleChange} />
                   <label>GST Number {getLevelBadge(1)}</label>
                 </div>
               </div>
               <div className="col-md-6">
                 <div className="form-floating">
-                  <input type="text" className={`form-control ${fieldErrors.panNumber ? "is-invalid" : ""}`} id="panNumber" name="panNumber" value={technicalData.panNumber} onChange={handleTechnicalChange} />
+                  <input type="text" className="form-control" name="panNumber" value={formData.panNumber} onChange={handleChange} />
                   <label>PAN Number {getLevelBadge(1)}</label>
                 </div>
               </div>
               <div className="col-md-6">
                 <div className="form-floating">
-                  <select className={`form-select ${fieldErrors.makeIndiaClass ? "is-invalid" : ""}`} id="makeIndiaClass" name="makeIndiaClass" value={technicalData.makeIndiaClass} onChange={handleTechnicalChange}>
+                  <select className="form-select" name="makeIndiaClass" value={formData.makeIndiaClass} onChange={handleChange}>
                     <option value="">Select Class</option>
                     <option value="Class 1">Class 1 - 100% Local</option>
                     <option value="Class 2">Class 2 - 50% Local</option>
@@ -377,25 +415,41 @@ const submitFinancialBid = async () => {
               </div>
               <div className="col-md-6">
                 <div className="form-floating">
-                  <input type="number" className={`form-control ${fieldErrors.bidderTurnover ? "is-invalid" : ""}`} id="bidderTurnover" name="bidderTurnover" value={technicalData.bidderTurnover} onChange={handleTechnicalChange} />
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="bidderTurnover"
+                    value={formData.bidderTurnover === "" ? "" : formatNumber(formData.bidderTurnover)}
+                    onChange={handleNumberChange}
+                    inputMode="numeric"
+                    placeholder="0"
+                  />
                   <label>Bidder Turnover (₹) {getLevelBadge(2)}</label>
                 </div>
               </div>
               <div className="col-md-6">
                 <div className="form-floating">
-                  <input type="number" className={`form-control ${fieldErrors.oemTurnover ? "is-invalid" : ""}`} id="oemTurnover" name="oemTurnover" value={technicalData.oemTurnover} onChange={handleTechnicalChange} />
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="oemTurnover"
+                    value={formData.oemTurnover === "" ? "" : formatNumber(formData.oemTurnover)}
+                    onChange={handleNumberChange}
+                    inputMode="numeric"
+                    placeholder="0"
+                  />
                   <label>OEM Turnover (₹) {getLevelBadge(2)}</label>
                 </div>
               </div>
               <div className="col-md-6">
                 <div className="form-floating">
-                  <input type="text" className={`form-control ${fieldErrors.oemName ? "is-invalid" : ""}`} id="oemName" name="oemName" value={technicalData.oemName} onChange={handleTechnicalChange} />
+                  <input type="text" className="form-control" name="oemName" value={formData.oemName} onChange={handleChange} />
                   <label>OEM Name {getLevelBadge(3)}</label>
                 </div>
               </div>
               <div className="col-md-6">
                 <div className="form-floating">
-                  <textarea className={`form-control ${fieldErrors.authorizationDetails ? "is-invalid" : ""}`} id="authorizationDetails" name="authorizationDetails" style={{ height: "80px" }} value={technicalData.authorizationDetails} onChange={handleTechnicalChange} />
+                  <textarea className="form-control" name="authorizationDetails" style={{ height: "80px" }} value={formData.authorizationDetails} onChange={handleChange} />
                   <label>Authorization Details {getLevelBadge(3)}</label>
                 </div>
               </div>
@@ -403,13 +457,13 @@ const submitFinancialBid = async () => {
 
             <div className="card bg-light p-3 mt-3">
               <div className="form-check">
-                <input type="checkbox" className="form-check-input" id="isMsme" name="isMsme" checked={technicalData.isMsme} onChange={handleTechnicalChange} />
-                <label className="form-check-label fw-semibold" htmlFor="isMsme">MSME Exemption</label>
+                <input type="checkbox" className="form-check-input" name="isMsme" checked={formData.isMsme} onChange={handleChange} />
+                <label className="form-check-label fw-semibold">MSME Exemption</label>
               </div>
-              {technicalData.isMsme && (
+              {formData.isMsme && (
                 <div className="mt-2">
                   <div className="form-floating">
-                    <input type="text" className="form-control" id="msmeNumber" name="msmeNumber" value={technicalData.msmeNumber} onChange={handleTechnicalChange} />
+                    <input type="text" className="form-control" name="msmeNumber" value={formData.msmeNumber} onChange={handleChange} />
                     <label>MSME Number</label>
                   </div>
                 </div>
@@ -418,90 +472,133 @@ const submitFinancialBid = async () => {
 
             <div className="mb-4 mt-3">
               <label className="form-label fw-semibold">Supporting Documents</label>
-              <input type="file" className="form-control" multiple accept=".pdf,.doc,.docx" onChange={handleTechnicalFileChange} />
-              {technicalFiles.length > 0 && <small className="text-success mt-1 d-block">{technicalFiles.length} file(s) selected</small>}
+              <input type="file" className="form-control" multiple accept=".pdf,.doc,.docx" onChange={(e) => setTechnicalFiles(Array.from(e.target.files))} />
+              {technicalFiles.length > 0 && <small className="text-success d-block mt-1">{technicalFiles.length} file(s) selected</small>}
             </div>
 
-            <div className="d-flex justify-content-end">
-              <button className="btn btn-primary px-4" onClick={submitTechnicalBid} disabled={loading}>
-                {loading ? <span className="spinner-border spinner-border-sm me-2" /> : null}
-                Submit Technical Bid →
+            <div className="d-flex justify-content-between">
+              <button className="btn btn-outline-secondary" onClick={saveDraft} disabled={loading}>
+                {loading ? <span className="spinner-border spinner-border-sm me-1" /> : null}
+                Save as Draft
+              </button>
+              <button className="btn btn-primary" onClick={handleNext} disabled={loading}>
+                Next: Financial Details →
               </button>
             </div>
+            {draftSaved && <small className="text-success d-block mt-2">✓ Draft saved</small>}
           </div>
         </div>
       )}
 
-      {/* FINANCIAL SECTION */}
-      {step === "financial" && (
+      {/* Step 2: Financial */}
+      {currentStep === 2 && (
         <div className="card">
           <div className="card-header bg-light">
-            <h6 className="mb-0 fw-semibold">Cover 2: Financial Bid</h6>
-            <small className="text-muted">Data encrypted - revealed only after technical evaluation</small>
+            <h6 className="mb-0 fw-semibold">Step 2: Financial Bid</h6>
+            <small>Your financial data will be encrypted</small>
           </div>
           <div className="card-body">
             <div className="row g-3">
               <div className="col-md-6">
                 <div className="form-floating">
-                  <input type="number" className={`form-control ${fieldErrors.totalBidAmount ? "is-invalid" : ""}`} id="totalBidAmount" name="totalBidAmount" value={financialData.totalBidAmount} onChange={handleFinancialChange} />
+                  <input type="text" className="form-control" name="totalBidAmount" value={formatNumber(formData.totalBidAmount)} onChange={handleNumberChange} inputMode="numeric" />
                   <label>Total Bid Amount (₹) {getLevelBadge(1)}</label>
                 </div>
               </div>
               <div className="col-md-6">
                 <div className="form-floating">
-                  <input type="number" className={`form-control ${fieldErrors.gstPercent ? "is-invalid" : ""}`} id="gstPercent" name="gstPercent" value={financialData.gstPercent} onChange={handleFinancialChange} />
+                  <input type="number" className="form-control" name="gstPercent" value={formData.gstPercent} onChange={handleChange} />
                   <label>GST Percentage (%) {getLevelBadge(2)}</label>
                 </div>
               </div>
               <div className="col-md-6">
                 <div className="form-floating">
-                  <input type="number" className="form-control bg-light" id="totalCost" value={financialData.totalCost} readOnly />
+                  <input type="number" className="form-control bg-light" value={formData.totalCost} readOnly />
                   <label>Total Cost (incl. GST) {getLevelBadge(2)}</label>
                 </div>
               </div>
               <div className="col-md-6">
                 <div className="form-floating">
-                  <input type="text" className={`form-control ${fieldErrors.bankName ? "is-invalid" : ""}`} id="bankName" name="bankName" value={financialData.bankName} onChange={handleFinancialChange} />
+                  <input type="text" className="form-control" name="bankName" value={formData.bankName} onChange={handleChange} />
                   <label>Bank Name {getLevelBadge(1)}</label>
                 </div>
               </div>
               <div className="col-md-6">
                 <div className="form-floating">
-                  <input type="text" className={`form-control ${fieldErrors.accountNumber ? "is-invalid" : ""}`} id="accountNumber" name="accountNumber" value={financialData.accountNumber} onChange={handleFinancialChange} />
+                  <input type="text" className="form-control" name="accountNumber" value={formData.accountNumber} onChange={handleChange} />
                   <label>Account Number {getLevelBadge(1)}</label>
                 </div>
               </div>
               <div className="col-md-6">
                 <div className="form-floating">
-                  <input type="text" className={`form-control ${fieldErrors.ifscCode ? "is-invalid" : ""}`} id="ifscCode" name="ifscCode" value={financialData.ifscCode} onChange={handleFinancialChange} />
+                  <input type="text" className="form-control" name="ifscCode" value={formData.ifscCode} onChange={handleChange} />
                   <label>IFSC Code {getLevelBadge(1)}</label>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="form-floating">
-                  <input type="text" className="form-control" id="emdNumber" name="emdNumber" value={financialData.emdNumber} onChange={handleFinancialChange} />
-                  <label>EMD Number {getLevelBadge(3)}</label>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="form-floating">
-                  <input type="number" className="form-control" id="emdValue" name="emdValue" value={financialData.emdValue} onChange={handleFinancialChange} />
-                  <label>EMD Value (₹) {getLevelBadge(3)}</label>
                 </div>
               </div>
             </div>
 
             <div className="mb-4 mt-3">
               <label className="form-label fw-semibold">BOQ / Financial Documents</label>
-              <input type="file" className="form-control" accept=".xlsx,.xls,.pdf" onChange={handleFinancialFileChange} />
-              {financialFiles.length > 0 && <small className="text-success mt-1 d-block">{financialFiles[0].name} selected</small>}
+              <input type="file" className="form-control" accept=".xlsx,.xls,.pdf" onChange={(e) => setFinancialFiles(Array.from(e.target.files))} />
+              {financialFiles.length > 0 && <small className="text-success d-block mt-1">{financialFiles[0]?.name} selected</small>}
             </div>
 
             <div className="d-flex justify-content-between">
-              <button className="btn btn-outline-secondary" onClick={() => setStep("technical")}>← Back</button>
-              <button className="btn btn-success px-4" onClick={submitFinancialBid} disabled={loading}>
+              <button className="btn btn-outline-secondary" onClick={handleBack}>← Back to Technical</button>
+              <button className="btn btn-primary" onClick={handleNext}>Next: Review →</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3: Review & Submit */}
+      {currentStep === 3 && (
+        <div className="card">
+          <div className="card-header bg-light">
+            <h6 className="mb-0 fw-semibold">Step 3: Review & Submit</h6>
+            <small>Please review your bid before final submission</small>
+          </div>
+          <div className="card-body">
+            <div className="row">
+              <div className="col-md-6">
+                <h6 className="text-primary">Technical Details</h6>
+                <table className="table table-sm">
+                  <tbody>
+                    <tr><td>Company Name:</td><td><strong>{formData.companyName}</strong></td></tr>
+                    <tr><td>GST Number:</td><td><strong>{formData.gstNumber}</strong></td></tr>
+                    <tr><td>PAN Number:</td><td><strong>{formData.panNumber}</strong></td></tr>
+                    <tr><td>Make in India Class:</td><td><strong>{formData.makeIndiaClass}</strong></td></tr>
+                    <tr><td>Bidder Turnover:</td><td><strong>₹ {formData.bidderTurnover?.toLocaleString()}</strong></td></tr>
+                    <tr><td>OEM Name:</td><td><strong>{formData.oemName}</strong></td></tr>
+                    <tr><td>OEM Turnover:</td><td><strong>₹ {formData.oemTurnover?.toLocaleString()}</strong></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="col-md-6">
+                <h6 className="text-primary">Financial Details</h6>
+                <table className="table table-sm">
+                  <tbody>
+                    <tr><td>Total Bid Amount:</td><td><strong>₹ {formData.totalBidAmount?.toLocaleString()}</strong></td></tr>
+                    <tr><td>GST %:</td><td><strong>{formData.gstPercent}%</strong></td></tr>
+                    <tr><td>Total Cost:</td><td><strong>₹ {formData.totalCost?.toLocaleString()}</strong></td></tr>
+                    <tr><td>Bank Name:</td><td><strong>{formData.bankName}</strong></td></tr>
+                    <tr><td>Account Number:</td><td><strong>{formData.accountNumber}</strong></td></tr>
+                    <tr><td>IFSC Code:</td><td><strong>{formData.ifscCode}</strong></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="alert alert-warning">
+              <i className="bi bi-exclamation-triangle-fill me-2" />
+              <strong>Important:</strong> Once submitted, you cannot edit your bid.
+            </div>
+
+            <div className="d-flex justify-content-between">
+              <button className="btn btn-outline-secondary" onClick={handleBack}>← Back to Financial</button>
+              <button className="btn btn-success px-4" onClick={handleSubmitFinal} disabled={loading}>
                 {loading ? <span className="spinner-border spinner-border-sm me-2" /> : null}
-                Submit Financial Bid
+                Submit Final Bid
               </button>
             </div>
           </div>
