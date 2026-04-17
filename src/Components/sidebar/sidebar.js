@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
 import eProcLogo from "../../assets/images/e-proc-logo.png";
 
-// Admin Menu (ROLE_ADMIN)
+// Admin Menu (PROCUREMENT_ADMIN)
 const adminMenuConfig = [
   {
     key: "dashboard",
@@ -126,7 +126,7 @@ const Sidebar = ({ collapsed, mobileOpen, onCloseMobile }) => {
   console.log("📱 Sidebar - User Roles:", userRoles);
 
   // Check role (handle both spellings)
-  const isAdmin = userRoles.some(role => role === "ROLE_ADMIN");
+  const isAdmin = userRoles.some(role => role === "PROCUREMENT_ADMIN");
   const isVendor = userRoles.some(role => role === "ROLE_VENDOR" || role === "ROLE_VENDER");
 
   console.log("📱 Sidebar - isAdmin:", isAdmin, "isVendor:", isVendor);

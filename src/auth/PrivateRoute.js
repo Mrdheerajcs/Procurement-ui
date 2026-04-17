@@ -4,15 +4,15 @@ import { useAuth } from "./useAuth";
 // Define route access rules 
 const routeAccessRules = {
   // Admin only routes
-  "/creatempr": ["ROLE_ADMIN"],
-  "/mpr-list": ["ROLE_ADMIN"],
-  "/mpr-approval": ["ROLE_ADMIN"],
-  "/mpr-approval-levels": ["ROLE_ADMIN"],
-  "/publishtender": ["ROLE_ADMIN"],
-  "/tender-approval": ["ROLE_ADMIN"],
-  "/technical-evaluation": ["ROLE_ADMIN"],
-  "/commercial-evaluation": ["ROLE_ADMIN"],
-  "/audit-logs": ["ROLE_ADMIN"],
+  "/creatempr": ["PROCUREMENT_ADMIN"],
+  "/mpr-list": ["PROCUREMENT_ADMIN"],
+  "/mpr-approval": ["PROCUREMENT_ADMIN"],
+  "/mpr-approval-levels": ["PROCUREMENT_ADMIN"],
+  "/publishtender": ["PROCUREMENT_ADMIN"],
+  "/tender-approval": ["PROCUREMENT_ADMIN"],
+  "/technical-evaluation": ["PROCUREMENT_ADMIN"],
+  "/commercial-evaluation": ["PROCUREMENT_ADMIN"],
+  "/audit-logs": ["PROCUREMENT_ADMIN"],
   
   // Vendor only routes
   "/bid-submission": ["ROLE_VENDOR", "ROLE_VENDER"],  // ✅ Added both spellings
@@ -21,17 +21,17 @@ const routeAccessRules = {
   "/clarification-response": ["ROLE_VENDOR", "ROLE_VENDER"],
   
   // Common routes
-  "/dashboard": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
-  "/searchtender": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
-  "/profile": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
-  "/mpr-history": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
+  "/dashboard": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
+  "/searchtender": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
+  "/profile": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
+  "/mpr-history": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
 
   // new routs
-  "/tenderfeepayment": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
-  "/workorderview": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
-  "/paymentgateway": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
-  "/ratevendor": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
-  "/contractdetails": ["ROLE_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
+  "/tenderfeepayment": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
+  "/workorderview": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
+  "/paymentgateway": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
+  "/ratevendor": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
+  "/contractdetails": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
 
 
 };

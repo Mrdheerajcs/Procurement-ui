@@ -69,7 +69,7 @@ const Dashboard = () => {
   
   // Get user role
   const userRoles = auth?.roles || [];
-  const isAdmin = userRoles.some(role => role === "ROLE_ADMIN");
+  const isAdmin = userRoles.some(role => role === "PROCUREMENT_ADMIN");
   const username = auth?.username || "User";
 
   const filtered = activeTab === "all" ? tenders : tenders.filter(t => t.status.toLowerCase().replace(" ", "-") === activeTab);
