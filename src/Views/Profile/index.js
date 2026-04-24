@@ -13,17 +13,14 @@ const ProfilePage = () => {
     email: "",
     currentPassword: "",
     newPassword: "",
-
     gstNo: "",
     panNo: "",
     registrationNo: "",
     licenseValidTill: "",
-
     accountHolder: "",
     accountNumber: "",
     ifsc: "",
     bankName: "",
-
     profilePic: null,
   });
 
@@ -37,36 +34,32 @@ const ProfilePage = () => {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setPreview(URL.createObjectURL(file));
-    }
+    if (file) setPreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
     if (
-     !user.accountHolder ||
+      !user.accountHolder ||
       !user.accountNumber ||
-     !user.ifsc ||
-     !user.bankName
-  ) {
+      !user.ifsc ||
+      !user.bankName
+    ) {
       alert("Please fill all bank details");
       return;
     }
 
     alert("Profile Updated Successfully ✅");
   };
+
   return (
     <div className="main-bg">
       <div className="container py-5">
         <div className="row justify-content-center">
           <div className="col-lg-10">
-
             <h2 className="fw-bold mb-1 title">My Profile</h2>
-            <p className="text-muted mb-3">
-              Manage your account details
-            </p>
+            <p className="text-muted mb-3">Manage your account details</p>
 
             <div className="row g-4">
 
@@ -83,7 +76,6 @@ const ProfilePage = () => {
                       className="profile-img"
                       alt=""
                     />
-
                     <label className="edit-btn">
                       <i className="bi bi-pencil-fill"></i>
                       <input type="file" hidden onChange={handleImageChange}/>
@@ -98,7 +90,6 @@ const ProfilePage = () => {
                     {user.email || "your@email.com"}
                   </p>
 
-                  {/* MENU */}
                   <div className="mt-4 w-100">
                     <div className={`nav-link-custom ${step === 1 ? "active" : ""}`} onClick={() => setStep(1)}>
                       Basic Info
@@ -125,17 +116,17 @@ const ProfilePage = () => {
 
                       <div className="row g-3">
                         {[
-                          { name: "vendorcode", placeholder: "Vendor Code" },
-                          { name: "fullName", placeholder: "Full Name" },
-                          { name: "dob", type: "date" },
-                          { name: "mobile", placeholder: "Mobile" },
-                          { name: "city", placeholder: "City" },
-                          { name: "state", placeholder: "State" },
-                           { name: "pincode", placeholder: "PinCode" },
-                          
-                          { name: "email", placeholder: "Email" },
+                          { name: "vendorcode", placeholder: "Vendor Code", label: "Vendor Code" },
+                          { name: "fullName", placeholder: "Full Name", label: "Full Name" },
+                          { name: "dob", type: "date", label: "Date of Birth" },
+                          { name: "mobile", placeholder: "Mobile", label: "Mobile" },
+                          { name: "city", placeholder: "City", label: "City" },
+                          { name: "state", placeholder: "State", label: "State" },
+                          { name: "pincode", placeholder: "Pin Code", label: "Pin Code" },
+                          { name: "email", placeholder: "Email", label: "Email" },
                         ].map((f, i) => (
-                         <div className="col-md-6">
+                          <div className="col-md-6" key={i}>
+                            <label className="form-label small">{f.label}</label>
                             <input
                               type={f.type || "text"}
                               name={f.name}
@@ -153,6 +144,7 @@ const ProfilePage = () => {
 
                       <div className="row g-3">
                         <div className="col-md-6 position-relative">
+                          <label className="form-label small">Current Password</label>
                           <input
                             type={showCurrent ? "text" : "password"}
                             name="currentPassword"
@@ -165,6 +157,7 @@ const ProfilePage = () => {
                         </div>
 
                         <div className="col-md-6 position-relative">
+                          <label className="form-label small">New Password</label>
                           <input
                             type={showNew ? "text" : "password"}
                             name="newPassword"
@@ -179,23 +172,27 @@ const ProfilePage = () => {
                     </>
                   )}
 
-                  {/* LEGAL (same layout) */}
+                  {/* LEGAL */}
                   {step === 2 && (
                     <>
                       <h5 className="mb-3">Legal Details</h5>
 
                       <div className="row g-3">
                         <div className="col-md-6">
-                          <input name="gstNo" placeholder="GST Number" className="glass-input" onChange={handleChange}/>
+                          <label className="form-label small">GST Number</label>
+                          <input name="gstNo" className="glass-input" placeholder="GST Number" onChange={handleChange}/>
                         </div>
                         <div className="col-md-6">
-                          <input name="panNo" placeholder="PAN Number" className="glass-input" onChange={handleChange}/>
+                          <label className="form-label small">PAN Number</label>
+                          <input name="panNo" className="glass-input" placeholder="PAN Number" onChange={handleChange}/>
                         </div>
                         <div className="col-md-6">
-                          <input name="registrationNo" placeholder="Registration Number" className="glass-input" onChange={handleChange}/>
+                          <label className="form-label small">Registration Number</label>
+                          <input name="registrationNo" className="glass-input" placeholder="Registration Number" onChange={handleChange}/>
                         </div>
                         <div className="col-md-6">
-                          <input type="date" name="licenseValidTill" className="glass-input" onChange={handleChange}/>
+                          <label className="form-label small">License Valid Till</label>
+                          <input type="date" name="licenseValidTill" className="glass-input" placeholder="License valid till" onChange={handleChange}/>
                         </div>
                       </div>
                     </>
@@ -208,24 +205,27 @@ const ProfilePage = () => {
 
                       <div className="row g-3">
                         <div className="col-12">
-                          <input name="accountHolder" placeholder="Account Holder Name" className="glass-input" onChange={handleChange}/>
+                          <label className="form-label small">Account Holder Name</label>
+                          <input name="accountHolder" className="glass-input" placeholder="Accounter Holder Name" onChange={handleChange}/>
                         </div>
                         <div className="col-md-6">
-                          <input name="accountNumber" placeholder="Account Number" className="glass-input" onChange={handleChange}/>
+                          <label className="form-label small">Account Number</label>
+                          <input name="accountNumber" className="glass-input" placeholder="Account Number" onChange={handleChange}/>
                         </div>
                         <div className="col-md-6">
-                          <input name="ifsc" placeholder="IFSC Code" className="glass-input" onChange={handleChange}/>
+                          <label className="form-label small">IFSC Code</label>
+                          <input name="ifsc" className="glass-input" placeholder="IFSC code" onChange={handleChange}/>
                         </div>
                         <div className="col-12">
-                          <input name="bankName" placeholder="Bank Name" className="glass-input" onChange={handleChange}/>
+                          <label className="form-label small">Bank Name</label>
+                          <input name="bankName" className="glass-input" placeholder="Bank Name" onChange={handleChange}/>
                         </div>
                       </div>
 
-                      {/* ✅ SAVE BUTTON */}
                       <div className="text-end mt-4">
-                       <button className="btn btn-primary" onClick={handleSubmit}>
-  Save Changes
-</button>
+                        <button className="btn btn-primary" onClick={handleSubmit}>
+                          Save Changes
+                        </button>
                       </div>
                     </>
                   )}
@@ -239,44 +239,36 @@ const ProfilePage = () => {
       </div>
 
       <style>{`
-       .glass-card {
-  background: rgba(255,255,255,0.7);
-  backdrop-filter: blur(12px);
-  border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-  transition: 0.3s ease;
-}
-
-/* 🔥 SAME HOVER EFFECT */
-.glass-card:hover {
-  transform: translateY(-6px) scale(1.01);
-}
-
-.glass-input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  background: rgba(255,255,255,0.6);
-  transition: 0.3s ease;
-}
-
-/* 🔥 CLEAN FOCUS EFFECT */
-.glass-input:focus {
-  outline: none;
-  border-color: #0a1f44;
-  box-shadow: 0 0 10px rgba(10,31,68,0.2);
-}
-
-        .form-card {
-          min-height: 520px;
+        .glass-card {
+          background: rgba(255,255,255,0.7);
+          backdrop-filter: blur(12px);
+          border-radius: 15px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          transition: 0.3s ease;
         }
 
-        .left-card {
-          min-height: 520px;
+        .glass-card:hover {
+          transform: translateY(-6px) scale(1.01);
         }
 
-        
+        .glass-input {
+          width: 100%;
+          padding: 10px;
+          border-radius: 10px;
+          border: 1px solid #ddd;
+          background: rgba(255,255,255,0.6);
+          transition: 0.3s ease;
+        }
+
+        .glass-input:focus {
+          outline: none;
+          border-color: #0a1f44;
+          box-shadow: 0 0 10px rgba(10,31,68,0.2);
+        }
+
+        .form-card { min-height: 520px; }
+        .left-card { min-height: 520px; }
+
         .profile-img-wrapper {
           position: relative;
           width: fit-content;
@@ -305,7 +297,6 @@ const ProfilePage = () => {
           cursor: pointer;
         }
 
-        /* SIMPLE HOVER */
         .nav-link-custom {
           padding: 10px;
           border-radius: 8px;
@@ -314,11 +305,7 @@ const ProfilePage = () => {
           transition: 0.3s;
         }
 
-        .nav-link-custom:hover {
-          background: #0a1f44;
-          color: white;
-        }
-
+        .nav-link-custom:hover,
         .nav-link-custom.active {
           background: #0a1f44;
           color: white;
