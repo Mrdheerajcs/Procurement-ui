@@ -6,7 +6,7 @@ const ClarificationResponse = () => {
   // ✅ useParams se actual bidId milega
   const { bidId } = useParams();
   const navigate = useNavigate();
-  
+  const [documentFile, setDocumentFile] = useState(null);
   const [bid, setBid] = useState(null);
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,7 +31,7 @@ const ClarificationResponse = () => {
       console.log("Fetching bid details for ID:", bidId);
       const res = await apiClient.get(`/api/bids/technical/details/${bidId}`);
       console.log("API Response:", res);
-      
+
       if (res.status === "SUCCESS") {
         setBid(res.data);
         // Check if deadline passed
@@ -54,38 +54,62 @@ const ClarificationResponse = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!response.trim()) {
-      setError("Please provide your response");
-      return;
+const handleSubmit = async () => {
+  if (!response.trim()) {
+    setError("Please provide your response");
+    return;
+  }
+
+  setLoading(true);
+  setError("");
+
+  try {
+    const formData = new FormData();
+
+    formData.append(
+      "data",
+      new Blob(
+        [
+          JSON.stringify({
+            bidTechnicalId: parseInt(bidId),
+            response: response,
+          }),
+        ],
+        { type: "application/json" }
+      )
+    );
+
+    if (documentFile) {
+      formData.append("file", documentFile);
     }
 
-    setLoading(true);
-    setError("");
-    
-    try {
-      const res = await apiClient.post("/api/bids/technical/clarification/response", {
-        bidTechnicalId: parseInt(bidId),  // ✅ Convert to number
-        response: response
-      });
-      
-      console.log("Submit Response:", res);
-      
-      if (res.status === "SUCCESS") {
-        setSuccess("Response submitted successfully! Admin will review your response.");
-        setTimeout(() => {
-          navigate("/searchtender");
-        }, 3000);
-      } else {
-        setError(res.message || "Failed to submit response");
+    const res = await apiClient.post(
+      "/api/bids/technical/clarification/response",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       }
-    } catch (err) {
-      console.error("Error submitting response:", err);
-      setError(err.message || "Failed to submit response");
-    } finally {
-      setLoading(false);
+    );
+
+    console.log("Submit Response:", res);
+
+    if (res.status === "SUCCESS") {
+      setSuccess("Response submitted successfully! Admin will review your response.");
+      setTimeout(() => {
+        navigate("/searchtender");
+      }, 3000);
+    } else {
+      setError(res.message || "Failed to submit response");
     }
-  };
+  } catch (err) {
+    console.error("Error submitting response:", err);
+    setError(err.message || "Failed to submit response");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Loading state
   if (fetching) {
@@ -106,8 +130,8 @@ const ClarificationResponse = () => {
             <i className="bi bi-exclamation-triangle-fill text-danger fs-1 d-block mb-3" />
             <h4 className="text-danger">Invalid Request</h4>
             <p className="text-muted">{error}</p>
-            <button 
-              className="btn btn-primary mt-3" 
+            <button
+              className="btn btn-primary mt-3"
               onClick={() => navigate("/searchtender")}
             >
               Go to Search Tender
@@ -127,8 +151,8 @@ const ClarificationResponse = () => {
             <i className="bi bi-inbox fs-1 text-muted d-block mb-3" />
             <h4>No Clarification Request Found</h4>
             <p className="text-muted">You don't have any pending clarification requests.</p>
-            <button 
-              className="btn btn-primary mt-3" 
+            <button
+              className="btn btn-primary mt-3"
               onClick={() => navigate("/searchtender")}
             >
               Browse Tenders
@@ -194,9 +218,9 @@ const ClarificationResponse = () => {
                   <i className="bi bi-reply-fill me-2" />
                   Your Response:
                 </label>
-                <textarea 
-                  className="form-control" 
-                  rows="6" 
+                <textarea
+                  className="form-control"
+                  rows="6"
                   value={response}
                   onChange={(e) => setResponse(e.target.value)}
                   placeholder="Type your response here..."
@@ -205,6 +229,23 @@ const ClarificationResponse = () => {
                 />
                 <small className="text-muted">
                   Be clear and provide all requested information.
+                </small>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-semibold">
+                  <i className="bi bi-paperclip me-2" />
+                  Supporting Documents (Optional)
+                </label>
+                <input
+                  type="file"
+                  className="form-control"
+                  accept=".pdf,.doc,.docx,.jpg,.png"
+                  onChange={(e) => setDocumentFile(e.target.files[0])}
+                  disabled={deadlinePassed}
+                />
+                <small className="text-muted">
+                  Upload any supporting documents
                 </small>
               </div>
 
@@ -224,8 +265,8 @@ const ClarificationResponse = () => {
 
               {/* Action Buttons */}
               <div className="d-flex gap-2 mt-4">
-                <button 
-                  className="btn btn-primary px-4" 
+                <button
+                  className="btn btn-primary px-4"
                   onClick={handleSubmit}
                   disabled={loading || deadlinePassed}
                 >
@@ -241,8 +282,8 @@ const ClarificationResponse = () => {
                     </>
                   )}
                 </button>
-                <button 
-                  className="btn btn-outline-secondary" 
+                <button
+                  className="btn btn-outline-secondary"
                   onClick={() => navigate("/searchtender")}
                 >
                   <i className="bi bi-arrow-left me-2" />

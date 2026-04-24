@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import apiClient from "../../auth/apiClient";
 import MessagePopup from "../../Components/MessagePopup";
+import DocumentViewer from "../../Components/DocumentViewer";
 
 const MPRApproval = () => {
   const [mprList, setMprList] = useState([]);
@@ -9,6 +10,9 @@ const MPRApproval = () => {
   const [itemActions, setItemActions] = useState({});
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [viewerDoc, setViewerDoc] = useState(null);
+  const [mprDocuments, setMprDocuments] = useState([]);
+  const [showDocumentsModal, setShowDocumentsModal] = useState(false);
 
   useEffect(() => {
     fetchMprList();
@@ -22,7 +26,7 @@ const MPRApproval = () => {
       });
 
       if (res.status === "SUCCESS") {
-        setMprList(res.data || []); // store raw data
+        setMprList(res.data || []);
       } else {
         console.error("Failed:", res.data?.message);
       }
@@ -30,6 +34,20 @@ const MPRApproval = () => {
       console.error("Error fetching MPR List:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ✅ Fetch documents for MPR
+  const fetchMprDocuments = async (mprId) => {
+    try {
+      const res = await apiClient.get(`/api/mpr/documents/${mprId}`);
+      if (res.status === "SUCCESS") {
+        setMprDocuments(res.data);
+        setShowDocumentsModal(true);
+      }
+    } catch (err) {
+      console.error("Error fetching documents:", err);
+      alert("Failed to load documents");
     }
   };
 
@@ -74,7 +92,7 @@ const MPRApproval = () => {
     if (!selectedMPR) return;
 
     const payload = {
-      mprHeaderId: selectedMPR.mprId,
+      mprHeaderId: parseInt(selectedMPR.mprId),
       mprApprovalLists: (selectedMPR.mprDetailResponnces || []).map((row) => ({
         mprdetailId: row.mprDetailId,
         status: itemActions[row.mprDetailId]?.status,
@@ -85,11 +103,8 @@ const MPRApproval = () => {
     try {
       const res = await apiClient.put("/api/mpr/approve", payload);
 
-      console.log("API RESPONSE:", res);
-
       if (res.status === "SUCCESS") {
-        setMsg({ type: "success", text: res.message });
-
+        setMsg({ type: "success", text: "MPR approved successfully!" });
         setSelectedMPR(null);
         fetchMprList();
       } else {
@@ -107,12 +122,19 @@ const MPRApproval = () => {
     }
   };
 
+  const formatNumber = (value) => {
+    if (!value) return "";
+    return new Intl.NumberFormat("en-IN").format(value);
+  };
 
-  const getStatusLabel = (status) => {
-    if (status === "n") return "Pending";
-    if (status === "a") return "Approved";
-    if (status === "r") return "Rejected";
-    return status;
+  const getFileIcon = (fileName) => {
+    if (!fileName) return <i className="bi bi-file-earmark-fill" />;
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    if (ext === 'pdf') return <i className="bi bi-file-pdf-fill text-danger" />;
+    if (ext === 'xlsx' || ext === 'xls') return <i className="bi bi-file-excel-fill text-success" />;
+    if (ext === 'doc' || ext === 'docx') return <i className="bi bi-file-word-fill text-primary" />;
+    if (ext === 'jpg' || ext === 'jpeg' || ext === 'png') return <i className="bi bi-file-image-fill text-info" />;
+    return <i className="bi bi-file-earmark-fill" />;
   };
 
   return (
@@ -157,7 +179,7 @@ const MPRApproval = () => {
                       <th>Department</th>
                       <th>Project</th>
                       <th>Priority</th>
-                      <th>Status</th>
+                      <th>Documents</th>
                       <th className="text-center">Action</th>
                     </tr>
                   </thead>
@@ -171,16 +193,22 @@ const MPRApproval = () => {
                     )}
                     {filteredList.map((mpr) => (
                       <tr key={mpr.mprId}>
-                        <td><span className="fw-semibold text-primary">{mpr.mprNo}</span></td>
+                        <td className="fw-semibold text-primary">{mpr.mprNo}</td>
                         <td>{mpr.departmentName || `Dept-${mpr.departmentId}`}</td>
                         <td>{mpr.projectName}</td>
                         <td>
-                          <span className={`badge rounded-pill ${mpr.priority === 'High' ? 'bg-danger' : mpr.priority === 'Medium' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
+                          <span className={`badge rounded-pill ${mpr.priority === 'HIGH' ? 'bg-danger' : mpr.priority === 'MEDIUM' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
                             {mpr.priority}
                           </span>
                         </td>
                         <td>
-                          <span className="badge bg-warning text-dark">{getStatusLabel(mpr.status)}</span>
+                          <button 
+                            className="btn btn-sm btn-outline-info" 
+                            onClick={() => fetchMprDocuments(mpr.mprId)}
+                            title="View Documents"
+                          >
+                            <i className="bi bi-paperclip" /> View Docs
+                          </button>
                         </td>
                         <td className="text-center">
                           <button className="btn btn-sm btn-primary" onClick={() => { setSelectedMPR(mpr); setItemActions({}); }}>
@@ -265,8 +293,8 @@ const MPRApproval = () => {
                           <td>{row.uom}</td>
                           <td>{row.specification}</td>
                           <td className="text-end">{row.requestedQty}</td>
-                          <td className="text-end">{row.estimatedRate}</td>
-                          <td className="text-end">{row.estimatedValue}</td>
+                          <td className="text-end">{formatNumber(row.estimatedRate)}</td>
+                          <td className="text-end">{formatNumber(row.estimatedValue)}</td>
                           <td className="text-end">{row.stockAvailable}</td>
                           <td>{row.avgMonthlyConsumption}</td>
                           <td>{row.lastPurchaseInfo}</td>
@@ -315,196 +343,55 @@ const MPRApproval = () => {
           </div>
         </div>
       )}
-    </div>
-  );
-};
 
-export default MPRApproval;
-
-/*
-
-        {msg && (
-          <MessagePopup
-            type={msg.type}
-            message={msg.text}
-            duration={4000}
-            onClose={() => setMsg(null)}
-          />
-        )}
-        {!selectedMPR && (
-          <>
-            <input
-              className="form-control mb-2"
-              placeholder="Search by MPR No / Dept / Project"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-
-            {loading ? (
-              <div className="text-center p-3">Loading...</div>
-            ) : (
-              <table className="table table-bordered table-striped table-sm text-center align-middle">
-                <thead className="table-dark">
-                  <tr>
-                    <th>MPR No</th>
-                    <th>Department</th>
-                    <th>Project</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredList.length === 0 && (
-                    <tr>
-                      <td colSpan={6}>No MPRs found</td>
-                    </tr>
-                  )}
-
-                  {filteredList.map((mpr) => (
-                    <tr key={mpr.mprId}>
-                      <td>{mpr.mprNo}</td>
-                      <td>{mpr.departmentName || `Dept-${mpr.departmentId}`}</td>
-                      <td>{mpr.projectName}</td>
-                      <td>{mpr.priority}</td>
-                      <td>{getStatusLabel(mpr.status)}</td>
-                      <td>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => {
-                            setSelectedMPR(mpr);
-                            setItemActions({});
-                          }}
-                        >
-                          Open
-                        </button>
-                      </td>
-                    </tr>
+      {/* Documents Modal */}
+      {showDocumentsModal && (
+        <div className="modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+          <div className="modal-container" style={{ backgroundColor: "white", borderRadius: "12px", width: "600px", maxWidth: "90%", maxHeight: "80%", overflow: "auto" }}>
+            <div className="modal-header" style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h5 className="modal-title">📄 MPR Documents</h5>
+              <button className="btn-close" onClick={() => setShowDocumentsModal(false)}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: "20px" }}>
+              {mprDocuments.length === 0 ? (
+                <p className="text-muted text-center">No documents uploaded for this MPR</p>
+              ) : (
+                <div className="list-group">
+                  {mprDocuments.map((doc, idx) => (
+                    <div key={idx} className="list-group-item d-flex justify-content-between align-items-center">
+                      <div>
+                        {getFileIcon(doc.fileName)}
+                        <span className="ms-2">{doc.fileName}</span>
+                        <small className="text-muted ms-2">({(doc.fileSize / 1024).toFixed(2)} KB)</small>
+                      </div>
+                      <button 
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => setViewerDoc({ filePath: doc.filePath, fileName: doc.fileName })}
+                      >
+                        <i className="bi bi-eye" /> View
+                      </button>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            )}
-          </>
-        )}
-
-        {selectedMPR && (
-          <div className="mt-3">
-            <div className="card mb-3 p-3">
-              <div className="row">
-                <div className="col-md-3">
-                  <b>MPR No:</b> {selectedMPR.mprNo}
                 </div>
-                <div className="col-md-3">
-                  <b>Date:</b>{" "}
-                  {new Date(selectedMPR.mprDate).toLocaleDateString()}
-                </div>
-                <div className="col-md-3">
-                  <b>Department:</b> {selectedMPR.departmentName || `Dept-${selectedMPR.departmentId}`}
-                </div>
-                <div className="col-md-3">
-                  <b>Project:</b> {selectedMPR.projectName}
-                </div>
-              </div>
+              )}
             </div>
-
-            <h5 className="mt-4 text-primary">Items</h5>
-            <div className="table-responsive">
-              <table className="table table-striped table-bordered table-hover table-sm text-center align-middle">
-                <thead className="table-dark">
-                  <tr>
-                    <th>SR</th>
-                    <th>Item Code</th>
-                    <th>Item Name</th>
-                    <th>UOM</th>
-                    <th>Specification</th>
-                    <th>Qty</th>
-                    <th>Rate</th>
-                    <th>Value</th>
-                    <th>Stock</th>
-                    <th>AMC</th>
-                    <th>Last Purchase</th>
-                    <th>Vendors</th>
-                    <th>Action</th>
-                    <th>Rejected Reason</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {(selectedMPR.mprDetailResponnces || []).map((row, idx) => {
-                    const action = itemActions[row.mprDetailId] || {};
-                    return (
-                      <tr key={row.mprDetailId || idx}>
-                        <td>{idx + 1}</td>
-                        <td>{row.itemCode}</td>
-                        <td>{row.itemName}</td>
-                        <td>{row.uom}</td>
-                        <td>{row.specification}</td>
-                        <td>{row.requestedQty}</td>
-                        <td>{row.estimatedRate}</td>
-                        <td>{row.estimatedValue}</td>
-                        <td>{row.stockAvailable}</td>
-                        <td>{row.avgMonthlyConsumption}</td>
-                        <td>{row.lastPurchaseInfo}</td>
-                        <td>
-                          {row.vendors?.length > 0
-                            ? row.vendors.map((v) => v.vendorName).join(", ")
-                            : "-"}
-                        </td>
-                        <td>
-                          <select
-                            className="form-select form-select-sm"
-                            value={action.status || ""}
-                            onChange={(e) =>
-                              handleStatusChange(row.mprDetailId, e.target.value)
-                            }
-                          >
-                            <option value="">Select</option>
-                            <option value="a">Approve</option>
-                            <option value="r">Reject</option>
-                          </select>
-                        </td>
-                        <td>
-                          {action.status === "r" && (
-                            <input
-                              type="text"
-                              className="form-control form-control-sm"
-                              placeholder="Enter reason"
-                              value={action.reason || ""}
-                              onChange={(e) =>
-                                handleReasonChange(row.mprDetailId, e.target.value)
-                              }
-                            />
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-3">
-              <button
-                className="btn btn-success"
-                disabled={!isAllSelected}
-                onClick={handleSubmit}
-              >
-                Submit
-              </button>
-
-              <button
-                className="btn btn-light ms-2"
-                onClick={() => setSelectedMPR(null)}
-              >
-                Back
-              </button>
+            <div className="modal-footer" style={{ padding: "16px 20px", borderTop: "1px solid #e5e7eb" }}>
+              <button className="btn btn-secondary" onClick={() => setShowDocumentsModal(false)}>Close</button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Document Viewer */}
+      {viewerDoc && (
+        <DocumentViewer
+          filePath={viewerDoc.filePath}
+          fileName={viewerDoc.fileName}
+          onClose={() => setViewerDoc(null)}
+        />
+      )}
     </div>
   );
 };
 
 export default MPRApproval;
-*/

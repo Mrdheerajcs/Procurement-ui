@@ -1,85 +1,58 @@
-﻿import React, { useState } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { useAuth } from "../../auth/useAuth";
+import { useNavigate } from "react-router-dom";
+import apiClient from "../../auth/apiClient";
 import "./dashboard.css";
-
-// Admin KPIs
-const adminKpis = [
-  { icon: "bi-file-earmark-text-fill", label: "Total Tenders",    value: "12", sub: "+3 this month",      subColor: "text-success",  gradient: "kpi-blue"   },
-  { icon: "bi-clipboard2-check-fill",  label: "Active MPRs",      value: "8",  sub: "5 pending approval", subColor: "text-warning",  gradient: "kpi-purple" },
-  { icon: "bi-send-fill",              label: "Total Bids",       value: "24", sub: "12 under evaluation",subColor: "text-info",     gradient: "kpi-teal"   },
-  { icon: "bi-bag-check-fill",         label: "Purchase Orders",  value: "9",  sub: "₹2.8 Cr total",     subColor: "text-success",  gradient: "kpi-orange" },
-  { icon: "bi-boxes",                  label: "Inventory Items",  value: "156",sub: "12 low-stock alerts",subColor: "text-danger",   gradient: "kpi-red"    },
-  { icon: "bi-journal-check",          label: "Active Contracts", value: "5",  sub: "2 ending this Qtr", subColor: "text-info",     gradient: "kpi-green"  },
-];
-
-const pipeline = [
-  { label: "Draft",      count: 2,  color: "#94a3b8" },
-  { label: "Published",  count: 4,  color: "#3b82f6" },
-  { label: "Bid Open",   count: 2,  color: "#f59e0b" },
-  { label: "Evaluation", count: 3,  color: "#8b5cf6" },
-  { label: "Awarded",    count: 2,  color: "#10b981" },
-  { label: "Closed",     count: 1,  color: "#6b7280" },
-];
-
-const deptData = [
-  { dept: "PWD",     pct: 35, tenders: 4, color: "#3b82f6" },
-  { dept: "Health",  pct: 25, tenders: 3, color: "#10b981" },
-  { dept: "IT",      pct: 20, tenders: 2, color: "#06b6d4" },
-  { dept: "Admin",   pct: 12, tenders: 2, color: "#f59e0b" },
-  { dept: "Finance", pct: 8,  tenders: 1, color: "#8b5cf6" },
-];
-
-const tenders = [
-  { id: "TND/2025/001", title: "Construction Material Supply", published: "Feb 10", deadline: "Mar 20", status: "Published",  bids: 8,  statusClass: "ds-badge-success" },
-  { id: "TND/2025/002", title: "Medical Equipment Supply",     published: "Mar 01", deadline: "Mar 25", status: "Evaluation", bids: 5,  statusClass: "ds-badge-info"    },
-  { id: "TND/2025/003", title: "IT Hardware Procurement",      published: "Mar 05", deadline: "Mar 30", status: "Published",  bids: 12, statusClass: "ds-badge-success" },
-  { id: "TND/2025/004", title: "Office Furniture Supply",      published: "Mar 10", deadline: "Apr 05", status: "Draft",      bids: 0,  statusClass: "ds-badge-muted"   },
-  { id: "TND/2025/005", title: "Laboratory Equipment",         published: "Feb 25", deadline: "Mar 28", status: "Awarded",    bids: 6,  statusClass: "ds-badge-purple"  },
-  { id: "TND/2025/006", title: "Vehicle Fleet Management",     published: "Mar 12", deadline: "Apr 10", status: "Bid Open",   bids: 4,  statusClass: "ds-badge-warning" },
-  { id: "TND/2025/007", title: "Cleaning Services Contract",   published: "Feb 28", deadline: "Mar 22", status: "Closed",     bids: 10, statusClass: "ds-badge-muted"   },
-  { id: "TND/2025/008", title: "Security Services",            published: "Mar 15", deadline: "Apr 12", status: "Published",  bids: 3,  statusClass: "ds-badge-success" },
-];
-
-const feed = [
-  { icon: "bi-file-earmark-plus",  color: "#3b82f6", text: "New tender published: TND/2025/008",  time: "2 h ago"    },
-  { icon: "bi-send",               color: "#06b6d4", text: "Bid submitted for TND/2025/003",       time: "5 h ago"    },
-  { icon: "bi-check2-circle",      color: "#f59e0b", text: "MPR/2025/002 approved by Finance",     time: "Yesterday"  },
-  { icon: "bi-receipt",            color: "#8b5cf6", text: "PO/2025/001 issued to UltraTech",      time: "Yesterday"  },
-  { icon: "bi-alarm",              color: "#ef4444", text: "Deadline alert: TND/2025/002 in 3 days",time: "1 day ago"  },
-  { icon: "bi-box-seam",           color: "#10b981", text: "Inventory restocked: Medical supplies",time: "2 days ago" },
-];
-
-const deadlines = [
-  { id: "TND/2025/002", event: "Bid Deadline",          date: "Mar 25, 2025", left: 3,  urgency: "high"   },
-  { id: "TND/2025/001", event: "Technical Evaluation",  date: "Mar 28, 2025", left: 6,  urgency: "medium" },
-  { id: "PO/2025/001",  event: "Delivery Due",          date: "Apr 30, 2025", left: 39, urgency: "low"    },
-];
-
-// Vendor Dashboard KPIs
-const vendorKpis = [
-  { icon: "bi-search", label: "Open Tenders", value: "8", sub: "New tenders available", gradient: "kpi-blue" },
-  { icon: "bi-send", label: "My Bids", value: "3", sub: "2 under evaluation", gradient: "kpi-purple" },
-  { icon: "bi-trophy", label: "Won Contracts", value: "1", sub: "Total value: ₹12L", gradient: "kpi-green" },
-  { icon: "bi-clock-history", label: "Pending Clarifications", value: "1", sub: "Response needed", gradient: "kpi-orange" },
-];
 
 const Dashboard = () => {
   const { auth } = useAuth();
+  const navigate = useNavigate();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
-  
-  // Get user role
+
   const userRoles = auth?.roles || [];
   const isAdmin = userRoles.some(role => role === "PROCUREMENT_ADMIN");
   const username = auth?.username || "User";
 
-  const filtered = activeTab === "all" ? tenders : tenders.filter(t => t.status.toLowerCase().replace(" ", "-") === activeTab);
+  useEffect(() => {
+    fetchDashboardData();
+  }, [isAdmin]);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const endpoint = isAdmin ? "/api/dashboard/admin" : "/api/dashboard/vendor";
+      const res = await apiClient.get(endpoint);
+      if (res.status === "SUCCESS") {
+        setDashboardData(res.data);
+      }
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Vendor Dashboard
   if (!isAdmin) {
+    if (loading) {
+      return (
+        <div className="ds-page">
+          <div className="container-fluid text-center py-5">
+            <div className="spinner-border text-primary" role="status" />
+          </div>
+        </div>
+      );
+    }
+
+    const stats = dashboardData?.vendorStats || {};
+    const quickActions = dashboardData?.quickActions || [];
+    const activities = dashboardData?.recentActivities || [];
+
     return (
       <div className="ds-page">
         <div className="container-fluid px-4 py-4">
-          {/* Page header */}
           <div className="ds-page-header mb-4">
             <div>
               <h4 className="ds-page-title mb-1">Welcome back, {username}!</h4>
@@ -87,72 +60,80 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Vendor KPI cards */}
+          {/* Vendor KPI cards - REAL DATA */}
           <div className="row g-3 mb-4">
-            {vendorKpis.map((k, i) => (
-              <div key={i} className="col-md-3 col-sm-6">
-                <div className={`ds-kpi-card ${k.gradient}`}>
-                  <div className="ds-kpi-icon"><i className={`bi ${k.icon}`} /></div>
-                  <div className="ds-kpi-value">{k.value}</div>
-                  <div className="ds-kpi-label">{k.label}</div>
-                  <div className="ds-kpi-sub">{k.sub}</div>
+            <div className="col-md-3 col-sm-6">
+              <div className="ds-kpi-card kpi-blue">
+                <div className="ds-kpi-icon"><i className="bi bi-search" /></div>
+                <div className="ds-kpi-value">{stats.openTenders || 0}</div>
+                <div className="ds-kpi-label">Open Tenders</div>
+                <div className="ds-kpi-sub">New tenders available</div>
+              </div>
+            </div>
+            <div className="col-md-3 col-sm-6">
+              <div className="ds-kpi-card kpi-purple">
+                <div className="ds-kpi-icon"><i className="bi bi-send" /></div>
+                <div className="ds-kpi-value">{stats.myBids || 0}</div>
+                <div className="ds-kpi-label">My Bids</div>
+                <div className="ds-kpi-sub">{stats.pendingEvaluations || 0} under evaluation</div>
+              </div>
+            </div>
+            <div className="col-md-3 col-sm-6">
+              <div className="ds-kpi-card kpi-green">
+                <div className="ds-kpi-icon"><i className="bi bi-trophy" /></div>
+                <div className="ds-kpi-value">{stats.wonContracts || 0}</div>
+                <div className="ds-kpi-label">Won Contracts</div>
+                <div className="ds-kpi-sub">Total value: ₹{stats.totalContractValue?.toLocaleString() || 0}</div>
+              </div>
+            </div>
+            <div className="col-md-3 col-sm-6">
+              <div className="ds-kpi-card kpi-orange">
+                <div className="ds-kpi-icon"><i className="bi bi-clock-history" /></div>
+                <div className="ds-kpi-value">{stats.pendingClarifications || 0}</div>
+                <div className="ds-kpi-label">Pending Clarifications</div>
+                <div className="ds-kpi-sub">Response needed</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions - REAL DATA */}
+          <div className="row g-3">
+            {quickActions.map((action, idx) => (
+              <div key={idx} className="col-md-4">
+                <div className="ds-card text-center p-4">
+                  <i className={`bi ${action.icon} fs-1 text-primary`} />
+                  <h5 className="mt-3">{action.title}</h5>
+                  <p className="text-muted">{action.description}</p>
+                  <button className="btn ds-btn-primary mt-2" onClick={() => navigate(action.link)}>
+                    {action.buttonText}
+                  </button>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Quick Actions */}
-          <div className="row g-3">
-            <div className="col-md-4">
-              <div className="ds-card text-center p-4">
-                <i className="bi bi-search fs-1 text-primary" />
-                <h5 className="mt-3">Browse Tenders</h5>
-                <p className="text-muted">Find and participate in open tenders</p>
-                <button className="btn ds-btn-primary mt-2" onClick={() => window.location.href = "/searchtender"}>
-                  Search Tenders →
-                </button>
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="ds-card text-center p-4">
-                <i className="bi bi-send fs-1 text-success" />
-                <h5 className="mt-3">Submit Bids</h5>
-                <p className="text-muted">Submit technical and financial bids</p>
-                <button className="btn ds-btn-primary mt-2" onClick={() => window.location.href = "/bid-submission"}>
-                  Submit Bid →
-                </button>
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="ds-card text-center p-4">
-                <i className="bi bi-file-contract fs-1 text-info" />
-                <h5 className="mt-3">My Contracts</h5>
-                <p className="text-muted">View awarded contracts</p>
-                <button className="btn ds-btn-primary mt-2" onClick={() => window.location.href = "/vendor-contracts"}>
-                  View Contracts →
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Activity */}
+          {/* Recent Activity - REAL DATA */}
           <div className="ds-card mt-4">
             <div className="ds-card-head">
               <span className="ds-card-title"><i className="bi bi-activity me-2 text-success" />Recent Activity</span>
             </div>
             <div className="ds-card-body p-0">
               <div className="ds-feed">
-                {feed.slice(0, 3).map((f, i) => (
-                  <div key={i} className="ds-feed-item">
-                    <div className="ds-feed-icon" style={{ background: f.color + "18", color: f.color }}>
-                      <i className={`bi ${f.icon}`} />
+                {activities.length === 0 ? (
+                  <div className="text-center py-4 text-muted">No recent activity</div>
+                ) : (
+                  activities.map((f, i) => (
+                    <div key={i} className="ds-feed-item">
+                      <div className="ds-feed-icon" style={{ background: f.color + "18", color: f.color }}>
+                        <i className={`bi ${f.icon}`} />
+                      </div>
+                      <div className="flex-grow-1">
+                        <div className="ds-feed-text">{f.text}</div>
+                        <div className="ds-feed-time">{f.time}</div>
+                      </div>
                     </div>
-                    <div className="flex-grow-1">
-                      <div className="ds-feed-text">{f.text}</div>
-                      <div className="ds-feed-time">{f.time}</div>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -161,34 +142,94 @@ const Dashboard = () => {
     );
   }
 
-  // Admin Dashboard (Original)
+  // Admin Dashboard
+  if (loading) {
+    return (
+      <div className="ds-page">
+        <div className="container-fluid text-center py-5">
+          <div className="spinner-border text-primary" role="status" />
+        </div>
+      </div>
+    );
+  }
+
+  const stats = dashboardData?.adminStats || {};
+  const pipeline = dashboardData?.pipeline || [];
+  const deptData = dashboardData?.departmentWise || [];
+  const tendersList = dashboardData?.recentTenders || [];
+  const deadlines = dashboardData?.upcomingDeadlines || [];
+  const feed = dashboardData?.recentActivities || [];
+
+  const filtered = activeTab === "all" ? tendersList : tendersList.filter(t =>
+    t.status?.toLowerCase().replace(" ", "-") === activeTab
+  );
+
   return (
     <div className="ds-page">
       <div className="container-fluid px-4 py-4">
-        {/* Page header */}
         <div className="ds-page-header mb-4">
           <div>
             <h4 className="ds-page-title mb-1">Procurement Dashboard</h4>
-            <p className="ds-page-sub mb-0">Overview for April 2026</p>
+            <p className="ds-page-sub mb-0">Overview for {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}</p>
           </div>
           <div className="d-flex gap-2">
             <button className="btn ds-btn-outline"><i className="bi bi-download me-1" />Export</button>
-            <button className="btn ds-btn-primary"><i className="bi bi-plus-lg me-1" />New Tender</button>
+            <button className="btn ds-btn-primary" onClick={() => navigate("/publishtender")}>
+              <i className="bi bi-plus-lg me-1" />New Tender
+            </button>
           </div>
         </div>
 
-        {/* KPI strip */}
+        {/* Admin KPI cards - FIXED */}
         <div className="row g-3 mb-4">
-          {adminKpis.map((k, i) => (
-            <div key={i} className="col-6 col-sm-4 col-xl-2">
-              <div className={`ds-kpi-card ${k.gradient}`}>
-                <div className="ds-kpi-icon"><i className={`bi ${k.icon}`} /></div>
-                <div className="ds-kpi-value">{k.value}</div>
-                <div className="ds-kpi-label">{k.label}</div>
-                <div className={`ds-kpi-sub ${k.subColor}`}>{k.sub}</div>
-              </div>
+          <div className="col-6 col-sm-4 col-xl-2">
+            <div className="ds-kpi-card kpi-blue">
+              <div className="ds-kpi-icon"><i className="bi bi-file-earmark-text-fill" /></div>
+              <div className="ds-kpi-value">{stats.totalTenders || 0}</div>
+              <div className="ds-kpi-label">Total Tenders</div>
+              <div className="ds-kpi-sub text-success">+{stats.publishedThisMonth || 0} this month</div>
             </div>
-          ))}
+          </div>
+          <div className="col-6 col-sm-4 col-xl-2">
+            <div className="ds-kpi-card kpi-purple">
+              <div className="ds-kpi-icon"><i className="bi bi-clipboard2-check-fill" /></div>
+              <div className="ds-kpi-value">{stats.activeMprs || 0}</div>
+              <div className="ds-kpi-label">Active MPRs</div>
+              <div className="ds-kpi-sub text-warning">{stats.pendingApprovals || 0} pending approval</div>
+            </div>
+          </div>
+          <div className="col-6 col-sm-4 col-xl-2">
+            <div className="ds-kpi-card kpi-teal">
+              <div className="ds-kpi-icon"><i className="bi bi-send-fill" /></div>
+              <div className="ds-kpi-value">{stats.totalBids || 0}</div>
+              <div className="ds-kpi-label">Total Bids</div>
+              <div className="ds-kpi-sub text-info">{stats.pendingEvaluations || 0} under evaluation</div>
+            </div>
+          </div>
+          <div className="col-6 col-sm-4 col-xl-2">
+            <div className="ds-kpi-card kpi-orange">
+              <div className="ds-kpi-icon"><i className="bi bi-bag-check-fill" /></div>
+              <div className="ds-kpi-value">{stats.purchaseOrders || 0}</div>
+              <div className="ds-kpi-label">Purchase Orders</div>
+              <div className="ds-kpi-sub text-success">₹{(stats.totalPurchaseValue || 0).toLocaleString()} total</div>
+            </div>
+          </div>
+          <div className="col-6 col-sm-4 col-xl-2">
+            <div className="ds-kpi-card kpi-red">
+              <div className="ds-kpi-icon"><i className="bi bi-people-fill" /></div>
+              <div className="ds-kpi-value">{stats.qualifiedVendors || 0}</div>
+              <div className="ds-kpi-label">Qualified Vendors</div>
+              <div className="ds-kpi-sub text-success">Technically qualified</div>
+            </div>
+          </div>
+          <div className="col-6 col-sm-4 col-xl-2">
+            <div className="ds-kpi-card kpi-green">
+              <div className="ds-kpi-icon"><i className="bi bi-journal-check" /></div>
+              <div className="ds-kpi-value">{stats.activeContracts || 0}</div>
+              <div className="ds-kpi-label">Active Contracts</div>
+              <div className="ds-kpi-sub text-info">{stats.contractsEndingSoon || 0} ending this quarter</div>
+            </div>
+          </div>
         </div>
 
         {/* Tender pipeline */}
@@ -229,7 +270,7 @@ const Dashboard = () => {
                   <div key={i} className="ds-dept-row">
                     <span className="ds-dept-name">{d.dept}</span>
                     <div className="ds-dept-bar-track">
-                      <div className="ds-dept-bar-fill" style={{ width: `${d.pct}%`, background: d.color }} />
+                      <div className="ds-dept-bar-fill" style={{ width: `${d.percentage}%`, background: d.color }} />
                     </div>
                     <span className="ds-dept-count">{d.tenders} tenders</span>
                   </div>
@@ -242,7 +283,7 @@ const Dashboard = () => {
               <div className="ds-card-head">
                 <span className="ds-card-title"><i className="bi bi-table me-2 text-primary" />Recent Tenders</span>
                 <div className="ds-tab-group">
-                  {["all","published","evaluation","bid-open","awarded","closed"].map(t => (
+                  {["all", "published", "evaluation", "bid-open", "awarded", "closed"].map(t => (
                     <button key={t} className={`ds-tab ${activeTab === t ? "active" : ""}`}
                       onClick={() => setActiveTab(t)}>
                       {t === "all" ? "All" : t.replace("-", " ").replace(/\b\w/g, c => c.toUpperCase())}
@@ -257,16 +298,20 @@ const Dashboard = () => {
                       <tr><th>Tender ID</th><th>Title</th><th>Published</th><th>Deadline</th><th>Status</th><th className="text-center">Bids</th></tr>
                     </thead>
                     <tbody>
-                      {filtered.map((t, i) => (
-                        <tr key={i}>
-                          <td className="fw-semibold text-primary">{t.id}</td>
-                          <td>{t.title}</td>
-                          <td className="text-muted">{t.published}</td>
-                          <td className="text-muted">{t.deadline}</td>
-                          <td><span className={`ds-badge ${t.statusClass}`}>{t.status}</span></td>
-                          <td className="text-center fw-semibold">{t.bids}</td>
-                        </tr>
-                      ))}
+                      {filtered.length === 0 ? (
+                        <tr><td colSpan={6} className="text-center py-5 text-muted">No tenders found</td></tr>
+                      ) : (
+                        filtered.map((t, i) => (
+                          <tr key={i}>
+                            <td className="fw-semibold text-primary">{t.tenderNo}</td>
+                            <td>{t.title}</td>
+                            <td className="text-muted">{t.publishedDate}</td>
+                            <td className="text-muted">{t.deadline}</td>
+                            <td><span className={`ds-badge ${t.statusClass}`}>{t.status}</span></td>
+                            <td className="text-center fw-semibold">{t.bids}</td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -283,16 +328,20 @@ const Dashboard = () => {
                 <a href="#" className="ds-link">View all</a>
               </div>
               <div className="ds-card-body p-0">
-                {deadlines.map((d, i) => (
-                  <div key={i} className={`ds-deadline-item ds-dl-${d.urgency}`}>
-                    <div className="ds-dl-dot" />
-                    <div className="flex-grow-1">
-                      <div className="ds-dl-title">{d.id} — {d.event}</div>
-                      <div className="ds-dl-date">{d.date}</div>
+                {deadlines.length === 0 ? (
+                  <div className="text-center py-4 text-muted">No upcoming deadlines</div>
+                ) : (
+                  deadlines.map((d, i) => (
+                    <div key={i} className={`ds-deadline-item ds-dl-${d.urgency}`}>
+                      <div className="ds-dl-dot" />
+                      <div className="flex-grow-1">
+                        <div className="ds-dl-title">{d.id} — {d.event}</div>
+                        <div className="ds-dl-date">{d.date}</div>
+                      </div>
+                      <div className={`ds-dl-badge ds-dl-${d.urgency}`}>{d.left}d</div>
                     </div>
-                    <div className={`ds-dl-badge ds-dl-${d.urgency}`}>{d.left}d</div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
@@ -303,30 +352,22 @@ const Dashboard = () => {
               </div>
               <div className="ds-card-body p-0">
                 <div className="ds-feed">
-                  {feed.map((f, i) => (
-                    <div key={i} className="ds-feed-item">
-                      <div className="ds-feed-icon" style={{ background: f.color + "18", color: f.color }}>
-                        <i className={`bi ${f.icon}`} />
+                  {feed.length === 0 ? (
+                    <div className="text-center py-4 text-muted">No recent activity</div>
+                  ) : (
+                    feed.map((f, i) => (
+                      <div key={i} className="ds-feed-item">
+                        <div className="ds-feed-icon" style={{ background: f.color + "18", color: f.color }}>
+                          <i className={`bi ${f.icon}`} />
+                        </div>
+                        <div className="flex-grow-1">
+                          <div className="ds-feed-text">{f.text}</div>
+                          <div className="ds-feed-time">{f.time}</div>
+                        </div>
                       </div>
-                      <div className="flex-grow-1">
-                        <div className="ds-feed-text">{f.text}</div>
-                        <div className="ds-feed-time">{f.time}</div>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
-              </div>
-            </div>
-
-            {/* Quick actions */}
-            <div className="ds-card">
-              <div className="ds-card-head">
-                <span className="ds-card-title"><i className="bi bi-lightning-fill me-2 text-warning" />Quick Actions</span>
-              </div>
-              <div className="ds-card-body d-flex flex-column gap-2">
-                <button className="btn ds-btn-primary w-100"><i className="bi bi-plus-circle me-2" />New Tender</button>
-                <button className="btn ds-btn-outline w-100"><i className="bi bi-file-earmark-pdf me-2" />Generate Report</button>
-                <button className="btn ds-btn-outline w-100"><i className="bi bi-graph-up me-2" />View Analytics</button>
               </div>
             </div>
           </div>

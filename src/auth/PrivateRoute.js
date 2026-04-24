@@ -1,9 +1,9 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "./useAuth";
 
-// Define route access rules 
+// Define route access rules with NEW role names
 const routeAccessRules = {
-  // Admin only routes
+  // Admin only routes (PROCUREMENT_ADMIN)
   "/creatempr": ["PROCUREMENT_ADMIN"],
   "/mpr-list": ["PROCUREMENT_ADMIN"],
   "/mpr-approval": ["PROCUREMENT_ADMIN"],
@@ -13,37 +13,36 @@ const routeAccessRules = {
   "/technical-evaluation": ["PROCUREMENT_ADMIN"],
   "/commercial-evaluation": ["PROCUREMENT_ADMIN"],
   "/audit-logs": ["PROCUREMENT_ADMIN"],
+  "/ratevendor": ["PROCUREMENT_ADMIN"],
   
-  // Vendor only routes
-  "/bid-submission": ["ROLE_VENDOR", "ROLE_VENDER"],  // ✅ Added both spellings
-  "/vendor-contracts": ["ROLE_VENDOR", "ROLE_VENDER"],
-  "/pending-clarifications": ["ROLE_VENDOR", "ROLE_VENDER"],
-  "/clarification-response": ["ROLE_VENDOR", "ROLE_VENDER"],
+  // User routes (PROCUREMENT_USER)
+  "/creatempr": ["PROCUREMENT_ADMIN", "PROCUREMENT_USER"],
+  "/mpr-list": ["PROCUREMENT_ADMIN", "PROCUREMENT_USER"],
+  "/mpr-history": ["PROCUREMENT_ADMIN", "PROCUREMENT_USER", "VENDER_USER"],
   
-  // Common routes
-  "/dashboard": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
-  "/searchtender": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
-  "/profile": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
-  "/mpr-history": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
-
-  // new routs
-  "/tenderfeepayment": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
-  "/workorderview": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
-  "/paymentgateway": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
-  "/ratevendor": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
-  "/contractdetails": ["PROCUREMENT_ADMIN", "ROLE_VENDOR", "ROLE_VENDER"],
-
-
+  // Vendor only routes (VENDER_USER)
+  "/bid-submission": ["VENDER_USER"],
+  "/vendor-contracts": ["VENDER_USER"],
+  "/pending-clarifications": ["VENDER_USER"],
+  "/clarification-response": ["VENDER_USER"],
+  "/my-bids": ["VENDER_USER"],
+  "/tenderfeepayment": ["VENDER_USER"],
+  
+  // Common routes (All roles)
+  "/dashboard": ["PROCUREMENT_ADMIN", "PROCUREMENT_USER", "VENDER_USER"],
+  "/searchtender": ["PROCUREMENT_ADMIN", "PROCUREMENT_USER", "VENDER_USER"],
+  "/profile": ["PROCUREMENT_ADMIN", "PROCUREMENT_USER", "VENDER_USER"],
+  "/workorderview": ["PROCUREMENT_ADMIN", "PROCUREMENT_USER", "VENDER_USER"],
+  "/paymentgateway": ["PROCUREMENT_ADMIN", "PROCUREMENT_USER", "VENDER_USER"],
+  "/contractdetails": ["PROCUREMENT_ADMIN", "PROCUREMENT_USER", "VENDER_USER"],
 };
 
 const PrivateRoute = () => {
   const { auth } = useAuth();
   const location = useLocation();
 
-  // Debug: Log auth data
-  console.log("🔐 PrivateRoute - Auth Data:", auth);
-  console.log("🔐 PrivateRoute - User Roles:", auth?.roles);
-  console.log("🔐 PrivateRoute - Current Path:", location.pathname);
+  console.log("🔐 PrivateRoute - Auth:", auth);
+  console.log("🔐 PrivateRoute - Path:", location.pathname);
 
   // Check if user is logged in
   if (!auth || !auth.token) {
@@ -53,20 +52,13 @@ const PrivateRoute = () => {
 
   // Allow access to force-change-password page
   if (!auth.isPasswordChanged && location.pathname !== "/force-change-password") {
-    console.log("❌ Password not changed, redirecting to force-change-password");
+    console.log("❌ Password not changed");
     return <Navigate to="/force-change-password" replace />;
   }
 
-  // Get user roles (handle both ROLE_VENDOR and ROLE_VENDER)
+  // Get user roles
   const userRoles = auth.roles || [];
-  console.log("📋 User Roles from auth:", userRoles);
-  
-  // Normalize roles (convert ROLE_VENDER to ROLE_VENDOR if needed)
-  const normalizedRoles = userRoles.map(role => {
-    if (role === "ROLE_VENDER") return "ROLE_VENDOR";
-    return role;
-  });
-  console.log("📋 Normalized Roles:", normalizedRoles);
+  console.log("📋 User Roles:", userRoles);
 
   // Find matching route rule
   let matchedRoute = null;
@@ -87,13 +79,13 @@ const PrivateRoute = () => {
 
   // Check if user has required role
   const allowedRoles = routeAccessRules[matchedRoute];
-  console.log("🔑 Allowed Roles for this route:", allowedRoles);
+  console.log("🔑 Allowed Roles:", allowedRoles);
   
-  const hasAccess = allowedRoles.some(role => normalizedRoles.includes(role));
+  const hasAccess = allowedRoles.some(role => userRoles.includes(role));
   console.log("🎯 Has Access:", hasAccess);
 
   if (!hasAccess) {
-    console.log("❌ Access denied! Redirecting to dashboard");
+    console.log("❌ Access denied!");
     alert("You don't have permission to access this page");
     return <Navigate to="/dashboard" replace />;
   }

@@ -1,57 +1,232 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../../auth/useAuth";
+import apiClient from "../../auth/apiClient";
+import ProfileImg from "../../assets/images/profile_av.png";
 
 const ProfilePage = () => {
+  const { auth, setAuth } = useAuth();
   const [step, setStep] = useState(1);
-
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ type: "", text: "" });
+  
+  const userRoles = auth?.roles || [];
+  const isVendor = userRoles.some(role => role === "VENDER_USER");
+  const isAdmin = userRoles.some(role => role === "PROCUREMENT_ADMIN");
+  const username = auth?.username || "";
+  
   const [user, setUser] = useState({
     fullName: "",
-    dob: "",
     city: "",
     state: "",
+    pincode: "",
     mobile: "",
     email: "",
-    currentPassword: "",
-    newPassword: "",
+    vendorCode: "",
     gstNo: "",
     panNo: "",
     registrationNo: "",
     licenseValidTill: "",
     accountHolder: "",
     accountNumber: "",
-    ifsc: "",
+    ifscCode: "",
     bankName: "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
     profilePic: null,
   });
 
   const [preview, setPreview] = useState(null);
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const readOnlyFields = isVendor 
+    ? ["vendorCode", "email", "panNo", "registrationNo", "licenseValidTill"]
+    : ["email"];
+
+  useEffect(() => {
+    fetchProfile();
+  }, [isVendor]);
+
+  const fetchProfile = async () => {
+    setLoading(true);
+    try {
+      if (isVendor) {
+        const res = await apiClient.get("/api/vendors/profile");
+        if (res.status === "SUCCESS") {
+          const data = res.data;
+          setUser(prev => ({
+            ...prev,
+            fullName: data.vendorName || "",
+            vendorCode: data.vendorCode || "",
+            mobile: data.mobileNo || "",
+            email: data.emailId || username,
+            city: data.city || "",
+            state: data.state || "",
+            pincode: data.pincode || "",
+            gstNo: data.gstNo || "",
+            panNo: data.panNo || "",
+            registrationNo: data.drugLicenseNo || "",
+            licenseValidTill: data.licenseValidTill || "",
+            bankName: data.bankName || "",
+            accountHolder: data.contactPerson || "",
+            accountNumber: data.accountNo || "",
+            ifscCode: data.ifscCode || "",
+          }));
+        }
+      } else {
+        const res = await apiClient.get("/auth/profile");
+        if (res.status === "SUCCESS") {
+          const data = res.data;
+          setUser(prev => ({
+            ...prev,
+            fullName: data.username || username,
+            email: data.email || username,
+          }));
+          if (data.profilePicUrl) {
+            setPreview(data.profilePicUrl);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+      setMessage({ type: "error", text: "Failed to load profile" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Get profile pic URL from auth
+  const profilePicUrl = auth?.profilePicUrl || null;
 
   const handleChange = (e) => {
-    setUser({ ...user, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setUser({ ...user, [name]: value });
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (file) setPreview(URL.createObjectURL(file));
+    if (file) {
+      setUser({ ...user, profilePic: file });
+      setPreview(URL.createObjectURL(file));
+    }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleRemoveImage = () => {
+    setUser({ ...user, profilePic: null });
+    setPreview(null);
+  };
 
-    if (
-      !user.accountHolder ||
-      !user.accountNumber ||
-      !user.ifsc ||
-      !user.bankName
-    ) {
-      alert("Please fill all bank details");
+  const handleUpdateProfile = async () => {
+    setLoading(true);
+    setMessage({ type: "", text: "" });
+    
+    try {
+      if (isVendor) {
+        const formData = new FormData();
+        
+        const profileData = {
+          vendorName: user.fullName,
+          mobileNo: user.mobile,
+          city: user.city,
+          state: user.state,
+          pincode: user.pincode,
+          gstNo: user.gstNo,
+          contactPerson: user.accountHolder,
+          bankName: user.bankName,
+          accountNo: user.accountNumber,
+          ifscCode: user.ifscCode,
+        };
+        
+        formData.append("data", new Blob([JSON.stringify(profileData)], { type: "application/json" }));
+        
+        if (user.profilePic) {
+          formData.append("profilePic", user.profilePic);
+        }
+        
+        const res = await apiClient.put(`/api/vendors/${auth?.userId}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+        
+        if (res.status === "SUCCESS") {
+          setMessage({ type: "success", text: "Profile updated successfully!" });
+          
+          // ✅ Refresh auth to update header
+          const profileRes = await apiClient.get("/auth/profile");
+          if (profileRes.status === "SUCCESS" && setAuth) {
+            setAuth(prev => ({
+              ...prev,
+              profilePicUrl: profileRes.data.profilePicUrl
+            }));
+          }
+          
+          await fetchProfile();
+        } else {
+          setMessage({ type: "error", text: res.message || "Update failed" });
+        }
+      } else {
+        setMessage({ type: "info", text: "Admin profile update is limited. Contact super admin for changes." });
+      }
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      setMessage({ type: "error", text: err.message || "Failed to update profile" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!user.currentPassword || !user.newPassword) {
+      setMessage({ type: "error", text: "Please fill current and new password" });
       return;
     }
-
-    alert("Profile Updated Successfully ✅");
+    
+    if (user.newPassword !== user.confirmPassword) {
+      setMessage({ type: "error", text: "New password and confirm password do not match" });
+      return;
+    }
+    
+    if (user.newPassword.length < 6) {
+      setMessage({ type: "error", text: "Password must be at least 6 characters" });
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const res = await apiClient.post("/auth/changepassword", {
+        userName: username,
+        oldPassword: user.currentPassword,
+        newPassword: user.newPassword
+      });
+      
+      if (res.status === "SUCCESS" || res.status === 200) {
+        setMessage({ type: "success", text: "Password changed successfully!" });
+        setUser(prev => ({
+          ...prev,
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: ""
+        }));
+      } else {
+        setMessage({ type: "error", text: res.message || "Password change failed" });
+      }
+    } catch (err) {
+      console.error("Error changing password:", err);
+      setMessage({ type: "error", text: err.response?.data || "Failed to change password" });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading && !user.fullName) {
+    return (
+      <div className="container-fluid text-center py-5">
+        <div className="spinner-border text-primary" role="status" />
+        <p className="mt-2">Loading profile...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="main-bg">
@@ -61,47 +236,58 @@ const ProfilePage = () => {
             <h2 className="fw-bold mb-1 title">My Profile</h2>
             <p className="text-muted mb-3">Manage your account details</p>
 
+            {message.text && (
+              <div className={`alert alert-${message.type === "success" ? "success" : message.type === "info" ? "info" : "danger"} alert-dismissible fade show mb-3`}>
+                {message.text}
+                <button type="button" className="btn-close" onClick={() => setMessage({ type: "", text: "" })} />
+              </div>
+            )}
+
             <div className="row g-4">
 
               {/* LEFT CARD */}
               <div className="col-md-4">
                 <div className="glass-card text-center p-4 h-100 left-card">
-
                   <div className="profile-img-wrapper">
                     <img
-                      src={
-                        preview ||
-                        "https://cdn-icons-png.flaticon.com/512/149/149071.png"
-                      }
+                      src={preview || profilePicUrl || ProfileImg}
                       className="profile-img"
-                      alt=""
+                      alt="Profile"
+                      onError={(e) => { e.target.src = ProfileImg; }}
                     />
                     <label className="edit-btn">
                       <i className="bi bi-pencil-fill"></i>
-                      <input type="file" hidden onChange={handleImageChange}/>
+                      <input type="file" hidden accept="image/*" onChange={handleImageChange} />
                     </label>
                   </div>
-
-                  <h5 className="mt-3">
-                    {user.fullName || "Your Name"}
-                  </h5>
-
-                  <p className="text-muted small">
-                    {user.email || "your@email.com"}
-                  </p>
-
+                  {preview && (
+                    <button className="btn btn-sm btn-outline-danger mt-2" onClick={handleRemoveImage}>
+                      <i className="bi bi-trash me-1" /> Remove
+                    </button>
+                  )}
+                  <h5 className="mt-3">{user.fullName || "Your Name"}</h5>
+                  <p className="text-muted small">{user.email || "your@email.com"}</p>
+                  {isVendor && user.vendorCode && (
+                    <p className="text-muted small">Vendor Code: {user.vendorCode}</p>
+                  )}
                   <div className="mt-4 w-100">
                     <div className={`nav-link-custom ${step === 1 ? "active" : ""}`} onClick={() => setStep(1)}>
-                      Basic Info
+                      <i className="bi bi-person me-2" /> Basic Info
                     </div>
-                    <div className={`nav-link-custom ${step === 2 ? "active" : ""}`} onClick={() => setStep(2)}>
-                      Legal Details
-                    </div>
-                    <div className={`nav-link-custom ${step === 3 ? "active" : ""}`} onClick={() => setStep(3)}>
-                      Bank Details
+                    {isVendor && (
+                      <>
+                        <div className={`nav-link-custom ${step === 2 ? "active" : ""}`} onClick={() => setStep(2)}>
+                          <i className="bi bi-briefcase me-2" /> Legal Details
+                        </div>
+                        <div className={`nav-link-custom ${step === 3 ? "active" : ""}`} onClick={() => setStep(3)}>
+                          <i className="bi bi-bank me-2" /> Bank Details
+                        </div>
+                      </>
+                    )}
+                    <div className={`nav-link-custom ${step === 4 ? "active" : ""}`} onClick={() => setStep(4)}>
+                      <i className="bi bi-key me-2" /> Change Password
                     </div>
                   </div>
-
                 </div>
               </div>
 
@@ -109,122 +295,274 @@ const ProfilePage = () => {
               <div className="col-md-8">
                 <div className="glass-card p-4 form-card">
 
-                  {/* BASIC */}
+                  {/* BASIC INFO */}
                   {step === 1 && (
                     <>
-                      <h5 className="mb-3">Personal Info</h5>
-
+                      <h5 className="mb-3">Personal Information</h5>
                       <div className="row g-3">
-                        {[
-                          { name: "vendorcode", placeholder: "Vendor Code", label: "Vendor Code" },
-                          { name: "fullName", placeholder: "Full Name", label: "Full Name" },
-                          { name: "dob", type: "date", label: "Date of Birth" },
-                          { name: "mobile", placeholder: "Mobile", label: "Mobile" },
-                          { name: "city", placeholder: "City", label: "City" },
-                          { name: "state", placeholder: "State", label: "State" },
-                          { name: "pincode", placeholder: "Pin Code", label: "Pin Code" },
-                          { name: "email", placeholder: "Email", label: "Email" },
-                        ].map((f, i) => (
-                          <div className="col-md-6" key={i}>
-                            <label className="form-label small">{f.label}</label>
+                        <div className="col-md-6">
+                          <label className="form-label small">Full Name</label>
+                          <input
+                            type="text"
+                            name="fullName"
+                            placeholder="Full Name"
+                            value={user.fullName}
+                            onChange={handleChange}
+                            className={`glass-input ${readOnlyFields.includes("fullName") ? "read-only-field" : ""}`}
+                            readOnly={readOnlyFields.includes("fullName")}
+                          />
+                        </div>
+                        {isVendor && (
+                          <div className="col-md-6">
+                            <label className="form-label small">Vendor Code</label>
                             <input
-                              type={f.type || "text"}
-                              name={f.name}
-                              placeholder={f.placeholder}
-                              value={user[f.name]}
-                              onChange={handleChange}
-                              className="glass-input"
+                              type="text"
+                              name="vendorCode"
+                              placeholder="Vendor Code"
+                              value={user.vendorCode}
+                              className="glass-input read-only-field"
+                              readOnly
                             />
                           </div>
-                        ))}
-                      </div>
-
-                      {/* PASSWORD */}
-                      <h5 className="mt-4 mb-3">Change Password</h5>
-
-                      <div className="row g-3">
-                        <div className="col-md-6 position-relative">
-                          <label className="form-label small">Current Password</label>
+                        )}
+                        <div className="col-md-6">
+                          <label className="form-label small">Email Address</label>
                           <input
-                            type={showCurrent ? "text" : "password"}
-                            name="currentPassword"
-                            placeholder="Current Password"
-                            value={user.currentPassword}
-                            onChange={handleChange}
-                            className="glass-input pe-5"
+                            type="email"
+                            name="email"
+                            placeholder="Email"
+                            value={user.email}
+                            className="glass-input read-only-field"
+                            readOnly
                           />
-                          <i className="bi bi-eye toggle-eye" onClick={() => setShowCurrent(!showCurrent)} />
                         </div>
-
-                        <div className="col-md-6 position-relative">
-                          <label className="form-label small">New Password</label>
+                        <div className="col-md-6">
+                          <label className="form-label small">Mobile Number</label>
                           <input
-                            type={showNew ? "text" : "password"}
-                            name="newPassword"
-                            placeholder="New Password"
-                            value={user.newPassword}
+                            type="tel"
+                            name="mobile"
+                            placeholder="Mobile Number"
+                            value={user.mobile}
                             onChange={handleChange}
-                            className="glass-input pe-5"
+                            className="glass-input"
+                            disabled={!isVendor}
                           />
-                          <i className="bi bi-eye toggle-eye" onClick={() => setShowNew(!showNew)} />
                         </div>
+                        {isVendor && (
+                          <>
+                            <div className="col-md-4">
+                              <label className="form-label small">City</label>
+                              <input
+                                type="text"
+                                name="city"
+                                placeholder="City"
+                                value={user.city}
+                                onChange={handleChange}
+                                className="glass-input"
+                              />
+                            </div>
+                            <div className="col-md-4">
+                              <label className="form-label small">State</label>
+                              <input
+                                type="text"
+                                name="state"
+                                placeholder="State"
+                                value={user.state}
+                                onChange={handleChange}
+                                className="glass-input"
+                              />
+                            </div>
+                            <div className="col-md-4">
+                              <label className="form-label small">Pincode</label>
+                              <input
+                                type="text"
+                                name="pincode"
+                                placeholder="Pin Code"
+                                value={user.pincode}
+                                onChange={handleChange}
+                                className="glass-input"
+                              />
+                            </div>
+                          </>
+                        )}
                       </div>
+                      
+                      {isVendor && (
+                        <div className="text-end mt-4">
+                          <button className="btn btn-primary" onClick={handleUpdateProfile} disabled={loading}>
+                            {loading ? <span className="spinner-border spinner-border-sm me-2" /> : null}
+                            Save Changes
+                          </button>
+                        </div>
+                      )}
                     </>
                   )}
 
-                  {/* LEGAL */}
-                  {step === 2 && (
+                  {/* LEGAL DETAILS */}
+                  {step === 2 && isVendor && (
                     <>
                       <h5 className="mb-3">Legal Details</h5>
-
                       <div className="row g-3">
                         <div className="col-md-6">
                           <label className="form-label small">GST Number</label>
-                          <input name="gstNo" className="glass-input" placeholder="GST Number" onChange={handleChange}/>
+                          <input
+                            name="gstNo"
+                            className="glass-input"
+                            placeholder="GST Number"
+                            value={user.gstNo}
+                            onChange={handleChange}
+                          />
                         </div>
                         <div className="col-md-6">
                           <label className="form-label small">PAN Number</label>
-                          <input name="panNo" className="glass-input" placeholder="PAN Number" onChange={handleChange}/>
+                          <input
+                            name="panNo"
+                            className="glass-input read-only-field"
+                            placeholder="PAN Number"
+                            value={user.panNo}
+                            readOnly
+                          />
                         </div>
                         <div className="col-md-6">
                           <label className="form-label small">Registration Number</label>
-                          <input name="registrationNo" className="glass-input" placeholder="Registration Number" onChange={handleChange}/>
+                          <input
+                            name="registrationNo"
+                            className="glass-input read-only-field"
+                            placeholder="Registration Number"
+                            value={user.registrationNo}
+                            readOnly
+                          />
                         </div>
                         <div className="col-md-6">
                           <label className="form-label small">License Valid Till</label>
-                          <input type="date" name="licenseValidTill" className="glass-input" placeholder="License valid till" onChange={handleChange}/>
+                          <input
+                            type="date"
+                            name="licenseValidTill"
+                            className="glass-input read-only-field"
+                            value={user.licenseValidTill}
+                            readOnly
+                          />
                         </div>
                       </div>
                     </>
                   )}
 
-                  {/* BANK */}
-                  {step === 3 && (
+                  {/* BANK DETAILS */}
+                  {step === 3 && isVendor && (
                     <>
                       <h5 className="mb-3">Bank Details</h5>
-
                       <div className="row g-3">
                         <div className="col-12">
                           <label className="form-label small">Account Holder Name</label>
-                          <input name="accountHolder" className="glass-input" placeholder="Accounter Holder Name" onChange={handleChange}/>
+                          <input
+                            name="accountHolder"
+                            className="glass-input"
+                            placeholder="Account Holder Name"
+                            value={user.accountHolder}
+                            onChange={handleChange}
+                          />
                         </div>
                         <div className="col-md-6">
                           <label className="form-label small">Account Number</label>
-                          <input name="accountNumber" className="glass-input" placeholder="Account Number" onChange={handleChange}/>
+                          <input
+                            name="accountNumber"
+                            className="glass-input"
+                            placeholder="Account Number"
+                            value={user.accountNumber}
+                            onChange={handleChange}
+                          />
                         </div>
                         <div className="col-md-6">
                           <label className="form-label small">IFSC Code</label>
-                          <input name="ifsc" className="glass-input" placeholder="IFSC code" onChange={handleChange}/>
+                          <input
+                            name="ifscCode"
+                            className="glass-input"
+                            placeholder="IFSC Code"
+                            value={user.ifscCode}
+                            onChange={handleChange}
+                          />
                         </div>
                         <div className="col-12">
                           <label className="form-label small">Bank Name</label>
-                          <input name="bankName" className="glass-input" placeholder="Bank Name" onChange={handleChange}/>
+                          <input
+                            name="bankName"
+                            className="glass-input"
+                            placeholder="Bank Name"
+                            value={user.bankName}
+                            onChange={handleChange}
+                          />
                         </div>
                       </div>
-
                       <div className="text-end mt-4">
-                        <button className="btn btn-primary" onClick={handleSubmit}>
-                          Save Changes
+                        <button className="btn btn-primary" onClick={handleUpdateProfile} disabled={loading}>
+                          {loading ? <span className="spinner-border spinner-border-sm me-2" /> : null}
+                          Save Bank Details
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* CHANGE PASSWORD */}
+                  {step === 4 && (
+                    <>
+                      <h5 className="mb-3">Change Password</h5>
+                      <div className="row g-3">
+                        <div className="col-md-12 position-relative">
+                          <label className="form-label small">Current Password</label>
+                          <div className="position-relative">
+                            <input
+                              type={showCurrent ? "text" : "password"}
+                              name="currentPassword"
+                              placeholder="Current Password"
+                              value={user.currentPassword}
+                              onChange={handleChange}
+                              className="glass-input pe-5"
+                            />
+                            <i 
+                              className={`bi ${showCurrent ? "bi-eye-slash" : "bi-eye"} toggle-eye`} 
+                              onClick={() => setShowCurrent(!showCurrent)}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-12 position-relative">
+                          <label className="form-label small">New Password</label>
+                          <div className="position-relative">
+                            <input
+                              type={showNew ? "text" : "password"}
+                              name="newPassword"
+                              placeholder="New Password"
+                              value={user.newPassword}
+                              onChange={handleChange}
+                              className="glass-input pe-5"
+                            />
+                            <i 
+                              className={`bi ${showNew ? "bi-eye-slash" : "bi-eye"} toggle-eye`} 
+                              onClick={() => setShowNew(!showNew)}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-12 position-relative">
+                          <label className="form-label small">Confirm New Password</label>
+                          <div className="position-relative">
+                            <input
+                              type={showConfirm ? "text" : "password"}
+                              name="confirmPassword"
+                              placeholder="Confirm Password"
+                              value={user.confirmPassword}
+                              onChange={handleChange}
+                              className="glass-input pe-5"
+                            />
+                            <i 
+                              className={`bi ${showConfirm ? "bi-eye-slash" : "bi-eye"} toggle-eye`} 
+                              onClick={() => setShowConfirm(!showConfirm)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-end mt-4">
+                        <button className="btn btn-primary" onClick={handleChangePassword} disabled={loading}>
+                          {loading ? <span className="spinner-border spinner-border-sm me-2" /> : null}
+                          Change Password
                         </button>
                       </div>
                     </>
@@ -232,7 +570,6 @@ const ProfilePage = () => {
 
                 </div>
               </div>
-
             </div>
           </div>
         </div>
@@ -246,11 +583,9 @@ const ProfilePage = () => {
           box-shadow: 0 10px 25px rgba(0,0,0,0.1);
           transition: 0.3s ease;
         }
-
         .glass-card:hover {
           transform: translateY(-6px) scale(1.01);
         }
-
         .glass-input {
           width: 100%;
           padding: 10px;
@@ -259,29 +594,30 @@ const ProfilePage = () => {
           background: rgba(255,255,255,0.6);
           transition: 0.3s ease;
         }
-
         .glass-input:focus {
           outline: none;
           border-color: #0a1f44;
           box-shadow: 0 0 10px rgba(10,31,68,0.2);
         }
-
+        .read-only-field {
+          background-color: #e9ecef !important;
+          color: #6c757d !important;
+          cursor: not-allowed;
+        }
         .form-card { min-height: 520px; }
         .left-card { min-height: 520px; }
-
         .profile-img-wrapper {
           position: relative;
           width: fit-content;
           margin: auto;
         }
-
         .profile-img {
           width: 110px;
           height: 110px;
           border-radius: 50%;
           border: 3px solid #ddd;
+          object-fit: cover;
         }
-
         .edit-btn {
           position: absolute;
           bottom: 5px;
@@ -296,7 +632,6 @@ const ProfilePage = () => {
           justify-content: center;
           cursor: pointer;
         }
-
         .nav-link-custom {
           padding: 10px;
           border-radius: 8px;
@@ -304,19 +639,22 @@ const ProfilePage = () => {
           cursor: pointer;
           transition: 0.3s;
         }
-
         .nav-link-custom:hover,
         .nav-link-custom.active {
           background: #0a1f44;
           color: white;
         }
-
         .toggle-eye {
           position: absolute;
           right: 15px;
           top: 50%;
           transform: translateY(-50%);
           cursor: pointer;
+          color: #6c757d;
+          z-index: 10;
+        }
+        .toggle-eye:hover {
+          color: #0a1f44;
         }
       `}</style>
     </div>

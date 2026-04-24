@@ -12,7 +12,12 @@ const TenderApproval = () => {
   const [rejectReason, setRejectReason] = useState("");
   const [approvalRemarks, setApprovalRemarks] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [modalAction, setModalAction] = useState(""); // approve, reject, publish
+  const [modalAction, setModalAction] = useState(""); // approve, reject
+  
+  // ✅ NEW: View Details Modal
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewTender, setViewTender] = useState(null);
+  const [tenderDocuments, setTenderDocuments] = useState([]);
 
   useEffect(() => {
     fetchTenders();
@@ -21,34 +26,42 @@ const TenderApproval = () => {
   const fetchTenders = async () => {
     setLoading(true);
     try {
-      // Fetch pending approvals
       const pendingRes = await apiClient.get("/api/tenders/by-status/PENDING_APPROVAL");
-      if (pendingRes.status === "SUCCESS") {
-        setPendingTenders(pendingRes.data);
-      }
+      if (pendingRes.status === "SUCCESS") setPendingTenders(pendingRes.data);
 
-      // Fetch approved (ready for publish)
       const approvedRes = await apiClient.get("/api/tenders/by-status/APPROVED");
-      if (approvedRes.status === "SUCCESS") {
-        setApprovedTenders(approvedRes.data);
-      }
+      if (approvedRes.status === "SUCCESS") setApprovedTenders(approvedRes.data);
 
-      // Fetch rejected
       const rejectedRes = await apiClient.get("/api/tenders/by-status/REJECTED");
-      if (rejectedRes.status === "SUCCESS") {
-        setRejectedTenders(rejectedRes.data);
-      }
+      if (rejectedRes.status === "SUCCESS") setRejectedTenders(rejectedRes.data);
 
-      // Fetch published
       const publishedRes = await apiClient.get("/api/tenders/by-status/PUBLISHED");
-      if (publishedRes.status === "SUCCESS") {
-        setPublishedTenders(publishedRes.data);
-      }
+      if (publishedRes.status === "SUCCESS") setPublishedTenders(publishedRes.data);
     } catch (err) {
       console.error("Error fetching tenders:", err);
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ NEW: Fetch tender documents
+  const fetchTenderDocuments = async (tenderId) => {
+    try {
+      const res = await apiClient.get(`/api/tenders/${tenderId}/documents`);
+      if (res.status === "SUCCESS") {
+        setTenderDocuments(res.data || []);
+      }
+    } catch (err) {
+      console.error("Error fetching documents:", err);
+      setTenderDocuments([]);
+    }
+  };
+
+  // ✅ NEW: Open View Details Modal
+  const handleViewDetails = async (tender) => {
+    setViewTender(tender);
+    await fetchTenderDocuments(tender.tenderId);
+    setShowViewModal(true);
   };
 
   const handleApprove = async () => {
@@ -98,7 +111,6 @@ const TenderApproval = () => {
     }
   };
 
-  // ✅ NEW: Handle Publish Tender
   const handlePublish = async (tender) => {
     if (!window.confirm(`Are you sure you want to publish tender "${tender.tenderNo}"? Vendors will be able to see and bid on it.`)) {
       return;
@@ -150,6 +162,11 @@ const TenderApproval = () => {
     return new Date(date).toLocaleDateString();
   };
 
+  const formatCurrency = (amount) => {
+    if (!amount) return "₹ 0";
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(amount);
+  };
+
   const getTendersForTab = () => {
     switch(activeTab) {
       case "pending": return pendingTenders;
@@ -168,6 +185,14 @@ const TenderApproval = () => {
       case "published": return publishedTenders.length;
       default: return 0;
     }
+  };
+
+  // ✅ Helper to get document icon based on file type
+  const getFileIcon = (fileName) => {
+    if (fileName?.toLowerCase().includes('.pdf')) return <i className="bi bi-file-pdf-fill text-danger" />;
+    if (fileName?.toLowerCase().includes('.xlsx') || fileName?.toLowerCase().includes('.xls')) return <i className="bi bi-file-excel-fill text-success" />;
+    if (fileName?.toLowerCase().includes('.doc') || fileName?.toLowerCase().includes('.docx')) return <i className="bi bi-file-word-fill text-primary" />;
+    return <i className="bi bi-file-earmark-fill" />;
   };
 
   return (
@@ -236,8 +261,8 @@ const TenderApproval = () => {
                     <tr>
                       <td colSpan={8} className="text-center py-5 text-muted-soft">
                         <i className="bi bi-inbox fs-3 d-block mb-2" />No tenders found
-                      </td>
-                    </tr>
+                       </td>
+                     </tr>
                   ) : (
                     getTendersForTab().map((tender) => (
                       <tr key={tender.tenderId}>
@@ -249,6 +274,14 @@ const TenderApproval = () => {
                         <td>{getStatusBadge(tender.tenderStatus)}</td>
                         <td>{tender.createdBy || "-"}</td>
                         <td className="text-center">
+                          {/* ✅ NEW: View Details Button */}
+                          <button 
+                            className="btn btn-sm btn-info me-1" 
+                            onClick={() => handleViewDetails(tender)}
+                            title="View Tender Details"
+                          >
+                            <i className="bi bi-eye" /> View
+                          </button>
                           {activeTab === "pending" && (
                             <>
                               <button className="btn btn-sm btn-success me-1" onClick={() => openApproveModal(tender)}>
@@ -282,6 +315,126 @@ const TenderApproval = () => {
           )}
         </div>
       </div>
+
+      {/* ✅ NEW: View Details Modal */}
+      {showViewModal && viewTender && (
+        <div className="modal-overlay" style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)", display: "flex",
+          alignItems: "center", justifyContent: "center", zIndex: 9999
+        }}>
+          <div className="modal-container" style={{
+            backgroundColor: "white", borderRadius: "12px",
+            width: "900px", maxWidth: "95%", maxHeight: "90%", overflow: "auto"
+          }}>
+            <div className="modal-header" style={{
+              padding: "16px 20px", borderBottom: "1px solid #e5e7eb",
+              display: "flex", justifyContent: "space-between", alignItems: "center"
+            }}>
+              <h5 className="modal-title">Tender Details - {viewTender.tenderNo}</h5>
+              <button className="btn-close" onClick={() => setShowViewModal(false)} style={{ background: "none", border: "none", fontSize: "20px" }}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: "20px" }}>
+              
+              {/* Basic Information */}
+              <div className="card mb-3">
+                <div className="card-header bg-light">
+                  <h6 className="mb-0">Basic Information</h6>
+                </div>
+                <div className="card-body">
+                  <div className="row">
+                    <div className="col-md-4"><small className="text-muted">Tender Title</small><div className="fw-semibold">{viewTender.tenderTitle}</div></div>
+                    <div className="col-md-4"><small className="text-muted">Tender Type</small><div>{viewTender.tenderType || "-"}</div></div>
+                    <div className="col-md-4"><small className="text-muted">Bid Type</small><div>{viewTender.bidType || "Two Bid"}</div></div>
+                    <div className="col-md-4"><small className="text-muted">BOQ Type</small><div>{viewTender.boqType || "Item Rate"}</div></div>
+                    <div className="col-md-4"><small className="text-muted">Department</small><div>{viewTender.department || "-"}</div></div>
+                    <div className="col-md-4"><small className="text-muted">Project</small><div>{viewTender.projectName || "-"}</div></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial Details */}
+              <div className="card mb-3">
+                <div className="card-header bg-light">
+                  <h6 className="mb-0">Financial Details</h6>
+                </div>
+                <div className="card-body">
+                  <div className="row">
+                    <div className="col-md-3"><small className="text-muted">Estimated Value</small><div className="fw-semibold">{formatCurrency(viewTender.estimatedValue)}</div></div>
+                    <div className="col-md-3"><small className="text-muted">EMD Amount</small><div>{formatCurrency(viewTender.emdAmount)}</div></div>
+                    <div className="col-md-3"><small className="text-muted">Tender Fee</small><div>{formatCurrency(viewTender.tenderFee)}</div></div>
+                    <div className="col-md-3"><small className="text-muted">Bid Validity</small><div>{viewTender.bidValidity || "30"} days</div></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div className="card mb-3">
+                <div className="card-header bg-light">
+                  <h6 className="mb-0">Tender Timeline</h6>
+                </div>
+                <div className="card-body">
+                  <div className="row">
+                    <div className="col-md-3"><small className="text-muted">Publish Date</small><div>{formatDate(viewTender.publishDate)}</div></div>
+                    <div className="col-md-3"><small className="text-muted">Closing Date</small><div>{formatDate(viewTender.bidEndDate)}</div></div>
+                    <div className="col-md-3"><small className="text-muted">Bid Time</small><div>{viewTender.bidSubmissionEndTime || "17:00"}</div></div>
+                    <div className="col-md-3"><small className="text-muted">Pre-bid Meeting</small><div>{formatDate(viewTender.preBidMeetingDate)}</div></div>
+                    <div className="col-md-3"><small className="text-muted">Technical Opening</small><div>{formatDate(viewTender.techBidOpenDate)}</div></div>
+                    <div className="col-md-3"><small className="text-muted">Financial Opening</small><div>{formatDate(viewTender.finBidOpenDate)}</div></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              {viewTender.tenderDescription && (
+                <div className="card mb-3">
+                  <div className="card-header bg-light">
+                    <h6 className="mb-0">Description</h6>
+                  </div>
+                  <div className="card-body">
+                    <p className="mb-0">{viewTender.tenderDescription}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* ✅ Uploaded Documents */}
+              <div className="card">
+                <div className="card-header bg-light">
+                  <h6 className="mb-0">Uploaded Documents</h6>
+                </div>
+                <div className="card-body">
+                  {tenderDocuments.length === 0 ? (
+                    <p className="text-muted mb-0">No documents uploaded</p>
+                  ) : (
+                    <div className="list-group">
+                      {tenderDocuments.map((doc, idx) => (
+                        <div key={idx} className="list-group-item d-flex justify-content-between align-items-center">
+                          <div>
+                            {getFileIcon(doc.fileName)}
+                            <span className="ms-2">{doc.fileName}</span>
+                            <small className="text-muted d-block">{doc.fileType}</small>
+                          </div>
+                          <a 
+                            href={`http://localhost:8080/api/files/download?path=${encodeURIComponent(doc.filePath)}`} 
+                            className="btn btn-sm btn-outline-primary"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <i className="bi bi-download me-1" /> Download
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer" style={{ padding: "16px 20px", borderTop: "1px solid #e5e7eb" }}>
+              <button className="btn btn-secondary" onClick={() => setShowViewModal(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Approval/Rejection Modal */}
       {showModal && (
