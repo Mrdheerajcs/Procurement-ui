@@ -16,37 +16,41 @@ const Unauthorized = lazy(() => import("./Views/Unauthorized"));
 // Dashboard
 const Dashboard = lazy(() => import("./Views/Dashboard"));
 
-// MPR Modules
-const MPRManagement = lazy(() => import("./Views/Models/MPRManagement"));
+// ==================== MPR MODULES ====================
 const CreateMPR = lazy(() => import("./Views/CreateMPR"));
 const MPRApproval = lazy(() => import("./Views/MPRApproval"));
 const MPRHistory = lazy(() => import("./Views/MPRHistory"));
 const MPRApprovalLevels = lazy(() => import("./Views/pages/MPRApprovalLevels"));
+const MPRManagement = lazy(() => import("./Views/Models/MPRManagement")); // MPR List
 
-// Tender Modules
+// ==================== TENDER MODULES ====================
 const PublishTender = lazy(() => import("./Views/pages/PublishTender"));
 const SearchTender = lazy(() => import("./Views/pages/SearchTender"));
 const TenderApproval = lazy(() => import("./Views/pages/TenderApproval"));
+const AdminContractManagement = lazy(() => import("./Views/pages/AdminContractManagement"));
 
-// Evaluation Modules
+// ==================== EVALUATION MODULES ====================
 const TechnicalEvaluation = lazy(() => import("./Views/pages/TechnicalEvaluation"));
 const CommercialEvaluation = lazy(() => import("./Views/pages/CommercialEvaluation"));
 
-// Vendor Modules
+// ==================== VENDOR MODULES ====================
 const BidSubmission = lazy(() => import("./Views/pages/BidSubmission"));
 const VendorContracts = lazy(() => import("./Views/VendorContracts"));
 const ClarificationResponse = lazy(() => import("./Views/pages/ClarificationResponse"));
 const PendingClarifications = lazy(() => import("./Views/pages/PendingClarifications"));
 const MyBids = lazy(() => import("./Views/pages/MyBids"));
+const TenderResults = lazy(() => import("./Views/pages/TenderResults"));
 
-// New Pages (Dummy - will be replaced with real backend later)
-const WorkOrderView = lazy(() => import("./Views/pages/WorkOrderView"));
+// ==================== PAYMENT MODULES ====================
 const PaymentGateway = lazy(() => import("./Views/pages/PaymentGateway"));
+const TenderFeePayment = lazy(() => import("./Views/pages/TenderFeePayment"));
+
+// ==================== UTILITY PAGES ====================
+const WorkOrderView = lazy(() => import("./Views/pages/WorkOrderView"));
 const RateVendor = lazy(() => import("./Views/pages/RateVendor"));
 const ContractDetails = lazy(() => import("./Views/pages/ContractDetails"));
-const TenderPayment = lazy(() => import("./Views/pages/TenderFeePayment"));
 
-// Profile & Admin
+// ==================== PROFILE & ADMIN ====================
 const Profile = lazy(() => import("./Views/Profile"));
 const AuditLogs = lazy(() => import("./Views/pages/AuditLogs"));
 
@@ -63,12 +67,12 @@ function App() {
       <BrowserRouter>
         <Suspense fallback={<Loader />}>
           <Routes>
-            {/* Public Routes */}
+            {/* ==================== PUBLIC ROUTES ==================== */}
             <Route path="/" element={<Login />} />
             <Route path="/tenders" element={<ProcurementLanding />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             
-            {/* Protected Routes */}
+            {/* ==================== PROTECTED ROUTES ==================== */}
             <Route element={<PrivateRoute />}>
               <Route path="/force-change-password" element={<ForceChangePassword />} />
 
@@ -77,16 +81,17 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
 
                 {/* MPR Management */}
-                <Route path="/mpr-list" element={<MPRManagement />} />
                 <Route path="/creatempr" element={<CreateMPR />} />
                 <Route path="/mpr-approval" element={<MPRApproval />} />
                 <Route path="/mpr-history" element={<MPRHistory />} />
                 <Route path="/mpr-approval-levels" element={<MPRApprovalLevels />} />
+                <Route path="/mpr-list" element={<MPRManagement />} />
 
                 {/* Tender Management */}
                 <Route path="/publishtender" element={<PublishTender />} />
                 <Route path="/tender-approval" element={<TenderApproval />} />
                 <Route path="/searchtender" element={<SearchTender />} />
+                <Route path="/admin/contracts" element={<AdminContractManagement />} />
 
                 {/* Evaluation */}
                 <Route path="/technical-evaluation" element={<TechnicalEvaluation />} />
@@ -98,13 +103,16 @@ function App() {
                 <Route path="/clarification-response/:bidId" element={<ClarificationResponse />} />
                 <Route path="/pending-clarifications" element={<PendingClarifications />} />
                 <Route path="/my-bids" element={<MyBids />} />
+                <Route path="/tender-results" element={<TenderResults />} />
 
-                {/* Utility Pages (Dummy) */}
-                <Route path="/workorderview" element={<WorkOrderView />} />
+                {/* Payment Pages */}
                 <Route path="/paymentgateway" element={<PaymentGateway />} />
+                <Route path="/tenderfeepayment" element={<TenderFeePayment />} />
+
+                {/* Utility Pages */}
+                <Route path="/workorderview" element={<WorkOrderView />} />
                 <Route path="/ratevendor" element={<RateVendor />} />
                 <Route path="/contractdetails" element={<ContractDetails />} />
-                <Route path="/tenderfeepayment" element={<TenderPayment />} />
 
                 {/* Profile & Admin */}
                 <Route path="/profile" element={<Profile />} />

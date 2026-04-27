@@ -256,7 +256,7 @@ const PublishTender = () => {
     switch (priority) {
       case "HIGH": return <span className="badge bg-danger">High</span>;
       case "MEDIUM": return <span className="badge bg-warning text-dark">Medium</span>;
-      default: return <span className="badge bg-secondary">Normal</span>;
+      default: return <span className="badge bg-secondary">LOW</span>;
     }
   };
 

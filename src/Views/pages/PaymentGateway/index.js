@@ -1,142 +1,119 @@
-
 import React, { useState, useEffect } from "react";
+import apiClient from "../../../auth/apiClient";
 
-const PaymentGateway = () => {
-  const [data, setData] = useState([
-    { id: 1, orderId: "ORD-1001", amount: 5000, status: "PENDING" },
-    { id: 2, orderId: "ORD-1002", amount: 8000, status: "PENDING" },
-    { id: 3, orderId: "ORD-1003", amount: 15000, status: "PENDING" },
-    { id: 4, orderId: "ORD-1004", amount: 10000, status: "PENDING" }
-  ]);
+const PaymentGateway = ({ tenderId, amount, paymentType, onSuccess, onClose }) => {
+  const [loading, setLoading] = useState(false);
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
-  const [loadingId, setLoadingId] = useState(null);
-  const [rzpLoaded, setRzpLoaded] = useState(false);
-
-  // ✅ Razorpay Script Load
   useEffect(() => {
+    // Load Razorpay script
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
-
-    script.onload = () => {
-      setRzpLoaded(true);
-    };
-
-    script.onerror = () => {
-      alert("❌ Razorpay SDK load failed");
-    };
-
+    script.onload = () => setRazorpayLoaded(true);
     document.body.appendChild(script);
+
+    return () => {
+      const scriptElement = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+      if (scriptElement) scriptElement.remove();
+    };
   }, []);
 
-  // ✅ Payment Function
-  const handlePayment = (item) => {
-    if (!rzpLoaded) {
-      alert("⏳ Payment system loading, try again...");
+  const handlePayment = async () => {
+    if (!razorpayLoaded) {
+      alert("Payment system is loading. Please try again.");
       return;
     }
 
-    setLoadingId(item.id);
-
+    setLoading(true);
     try {
+      // Create order on backend
+      const orderRes = await apiClient.post("/api/payments/create-order", {
+        tenderId: tenderId,
+        amount: amount,
+        paymentType: paymentType || "TENDER_FEE",
+        email: JSON.parse(localStorage.getItem("auth"))?.email || "",
+        mobile: "",
+        name: ""
+      });
+
+      if (orderRes.status !== "SUCCESS") {
+        throw new Error(orderRes.message || "Failed to create order");
+      }
+
+      const order = orderRes.data;
+      const auth = JSON.parse(localStorage.getItem("auth"));
+
       const options = {
-        key: "rzp_test_xxxxxxxx", 
-        amount: item.amount * 100,
-        currency: "INR",
+        key: order.razorpayKeyId,
+        amount: order.amount * 100,
+        currency: order.currency,
         name: "E-Procurement Portal",
-        description: `Order - ${item.orderId}`,
+        description: `${paymentType} Payment`,
+        order_id: order.razorpayOrderId,
+        handler: async (response) => {
+          try {
+            // Verify payment
+            const verifyRes = await apiClient.post("/api/payments/verify", null, {
+              params: {
+                orderId: response.razorpay_order_id,
+                paymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature
+              }
+            });
 
-        handler: function () {
-          const updated = data.map((d) =>
-            d.id === item.id ? { ...d, status: "SUCCESS" } : d
-          );
-          setData(updated);
-
-          alert("✅ Payment Successful!");
-          setLoadingId(null);
-        },
-
-        modal: {
-          ondismiss: function () {
-            setLoadingId(null);
+            if (verifyRes.status === "SUCCESS") {
+              alert("Payment successful!");
+              if (onSuccess) onSuccess(response);
+              if (onClose) onClose();
+            } else {
+              alert("Payment verification failed");
+            }
+          } catch (err) {
+            console.error("Verification error:", err);
+            alert("Payment verification failed");
           }
         },
-
         prefill: {
-          name: "Vendor Name",
-          email: "vendor@email.com",
-          contact: "9999999999"
+          name: auth?.username || "",
+          email: auth?.email || "",
+          contact: ""
         },
-
         theme: {
           color: "#0d6efd"
+        },
+        modal: {
+          ondismiss: () => {
+            setLoading(false);
+          }
         }
       };
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-
-      rzp.on("payment.failed", function () {
-        alert("❌ Payment Failed!");
-        setLoadingId(null);
-      });
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
 
     } catch (err) {
-      console.error(err);
-      alert("Something went wrong!");
-      setLoadingId(null);
+      console.error("Payment error:", err);
+      alert(err.message || "Failed to initiate payment");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="container mt-5">
-      <div className="card p-4">
-        <h6 className="mb-3 text-left fw-semibold">Payment Gateway</h6>
-
-        <table className="table table-hover text-center align-middle">
-          <thead className="table-light">
-            <tr>
-              <th>Order ID</th>
-              <th>Amount</th>
-              <th>Payment Status</th>
-              <th>Pay Now</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {data.map((item) => (
-              <tr key={item.id}>
-                <td>{item.orderId}</td>
-
-                <td className="fw-bold text-primary">
-                  ₹ {item.amount.toLocaleString()}
-                </td>
-
-                <td>
-                  <span
-                    className={`badge ${
-                      item.status === "SUCCESS"
-                        ? "bg-success"
-                        : "bg-warning text-dark"
-                    }`}
-                  >
-                    {item.status}
-                  </span>
-                </td>
-
-                <td>
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={() => handlePayment(item)}
-                    disabled={loadingId === item.id || item.status === "SUCCESS"}
-                  >
-                    {loadingId === item.id ? "Processing..." : "Pay Now"}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+      <div className="modal-container" style={{ backgroundColor: "white", borderRadius: "12px", width: "400px", maxWidth: "90%", padding: "24px", textAlign: "center" }}>
+        <i className="bi bi-credit-card" style={{ fontSize: "48px", color: "#0d6efd" }} />
+        <h4 className="mt-3">Payment Details</h4>
+        <p className="text-muted">Amount: <strong>₹ {amount?.toLocaleString()}</strong></p>
+        <p className="text-muted">Type: {paymentType?.replace("_", " ")}</p>
+        <div className="d-flex gap-2 mt-4">
+          <button className="btn btn-secondary flex-grow-1" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary flex-grow-1" onClick={handlePayment} disabled={loading}>
+            {loading ? <span className="spinner-border spinner-border-sm me-2" /> : null}
+            Pay Now
+          </button>
+        </div>
       </div>
     </div>
   );

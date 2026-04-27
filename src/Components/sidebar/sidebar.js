@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
 import eProcLogo from "../../assets/images/e-proc-logo.png";
 
-// Admin Menu (PROCUREMENT_ADMIN)
+// ==================== ADMIN MENU (PROCUREMENT_ADMIN) ====================
 const adminMenuConfig = [
   {
     key: "dashboard",
@@ -18,20 +18,20 @@ const adminMenuConfig = [
     icon: "bi-clipboard2-check",
     items: [
       { label: "Create MPR", to: "/creatempr" },
-      // { label: "MPR List", to: "/mpr-list" },
       { label: "MPR Approval", to: "/mpr-approval" },
       { label: "MPR History", to: "/mpr-history" },
-      // { label: "MPR Approval Levels", to: "/mpr-approval-levels" },
+      { label: "MPR Approval Levels", to: "/mpr-approval-levels" },
     ],
   },
   {
     key: "tender",
-    title: "Tender",
+    title: "Tender Management",
     icon: "bi-megaphone",
     items: [
-      { label: "Create Tender", to: "/publishtender" },
-      { label: "Tender Approval & Publish", to: "/tender-approval" },
+      { label: "Publish Tender", to: "/publishtender" },
+      { label: "Tender Approval", to: "/tender-approval" },
       { label: "Search Tender", to: "/searchtender" },
+      { label: "Contract Management", to: "/admin/contracts" },
     ],
   },
   {
@@ -43,14 +43,14 @@ const adminMenuConfig = [
       { label: "Commercial Evaluation", to: "/commercial-evaluation" },
     ],
   },
-  // {
-  //   key: "vendor",
-  //   title: "Vendor Management",
-  //   icon: "bi-people",
-  //   items: [
-  //     { label: "Rate Vendor", to: "/ratevendor" },
-  //   ],
-  // },
+  {
+    key: "vendor",
+    title: "Vendor Management",
+    icon: "bi-people",
+    items: [
+      { label: "Rate Vendor", to: "/ratevendor" },
+    ],
+  },
   {
     key: "profile",
     title: "Profile",
@@ -58,25 +58,14 @@ const adminMenuConfig = [
     items: [{ label: "My Profile", to: "/profile" }],
   },
   {
-    key: "audit",
+    key: "admin",
     title: "Admin",
     icon: "bi-shield-lock",
     items: [{ label: "Audit Logs", to: "/audit-logs" }],
   },
-  // {
-  //   key: "newpage",
-  //   title: "Utilities",
-  //   icon: "bi-tools",
-  //   items: [
-  //     { label: "Work Order", to: "/workorderview" },
-  //     { label: "Payment Gateway", to: "/paymentgateway" },
-  //     { label: "Contract Details", to: "/contractdetails" },
-  //     { label: "Tender Fee", to: "/tenderfeepayment" },
-  //   ],
-  // },
 ];
 
-// User Menu (PROCUREMENT_USER)
+// ==================== USER MENU (PROCUREMENT_USER) ====================
 const userMenuConfig = [
   {
     key: "dashboard",
@@ -90,7 +79,6 @@ const userMenuConfig = [
     icon: "bi-clipboard2-check",
     items: [
       { label: "Create MPR", to: "/creatempr" },
-      { label: "MPR List", to: "/mpr-list" },
       { label: "MPR History", to: "/mpr-history" },
     ],
   },
@@ -110,7 +98,7 @@ const userMenuConfig = [
   },
 ];
 
-// Vendor Menu (VENDER_USER)
+// ==================== VENDOR MENU (VENDER_USER) ====================
 const vendorMenuConfig = [
   {
     key: "dashboard",
@@ -124,18 +112,27 @@ const vendorMenuConfig = [
     icon: "bi-megaphone",
     items: [
       { label: "Search Tender", to: "/searchtender" },
+      { label: "Bid Participation", to: "/bid-submission" },
       { label: "My Bids", to: "/my-bids" },
+      { label: "Tender Results", to: "/tender-results" },
+      { label: "Pending Clarifications", to: "/pending-clarifications" },
     ],
   },
   {
-    key: "vendor",
-    title: "Vendor Portal",
-    icon: "bi-building",
+    key: "contracts",
+    title: "Contracts",
+    icon: "bi-file-text",
     items: [
-      { label: "Bid Participation", to: "/bid-submission" },
       { label: "My Contracts", to: "/vendor-contracts" },
-      { label: "Pending Clarifications", to: "/pending-clarifications" },
+    ],
+  },
+  {
+    key: "payments",
+    title: "Payments",
+    icon: "bi-credit-card",
+    items: [
       { label: "Tender Fee Payment", to: "/tenderfeepayment" },
+      { label: "Payment Gateway", to: "/paymentgateway" },
     ],
   },
   {
@@ -156,9 +153,6 @@ const Sidebar = ({ collapsed, mobileOpen, onCloseMobile }) => {
   const isAdmin = userRoles.some(role => role === "PROCUREMENT_ADMIN");
   const isUser = userRoles.some(role => role === "PROCUREMENT_USER");
   const isVendor = userRoles.some(role => role === "VENDER_USER");
-
-  console.log("📱 Sidebar - Roles:", userRoles);
-  console.log("📱 Sidebar - isAdmin:", isAdmin, "isUser:", isUser, "isVendor:", isVendor);
 
   let menuConfig = [];
   if (isAdmin) {
